@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "quality_review_result.v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "tool_id",
+    "tool_version",
+    "candidate_id",
+    "input_hash",
+    "result_id",
+    "status",
+    "decision",
+    "issue_codes",
+    "error"
+  ],
+  "properties": {
+    "schema_version": {"const": "quality_review_result.v1"},
+    "tool_id": {"const": "lao_quality_review"},
+    "candidate_id": {"type": "string", "minLength": 1},
+    "input_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "result_id": {"type": "string", "pattern": "^lao_quality_review:[0-9a-f]{64}$"},
+    "status": {"enum": ["COMPLETED", "INVALID"]},
+    "decision": {"enum": ["ACCEPT", "REJECT", "ERROR"]},
+    "issue_codes": {"type": "array", "items": {"type": "string"}},
+    "error": {"type": ["string", "null"]}
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "difficulty_prescreen_result.v1",
+  "title": "Difficulty prescreen result",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "tool_id",
+    "tool_version",
+    "candidate_id",
+    "input_hash",
+    "result_id",
+    "pipeline_stage",
+    "metric_type",
+    "passrate",
+    "status",
+    "decision",
+    "gate_decision",
+    "passes_prescreen",
+    "next_stage",
+    "difficulty",
+    "method",
+    "issue_codes",
+    "error"
+  ],
+  "properties": {
+    "schema_version": {"const": "difficulty_prescreen_result.v1"},
+    "tool_id": {"const": "lao_difficulty_prescreen"},
+    "tool_version": {"const": "1.0.0"},
+    "candidate_id": {"type": "string", "minLength": 1},
+    "input_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "result_id": {"type": "string", "pattern": "^lao_difficulty_prescreen:[0-9a-f]{64}$"},
+    "pipeline_stage": {"const": "DIFFICULTY_PRESCREEN"},
+    "metric_type": {"const": "single_answer_pairwise_gap_prescreen"},
+    "passrate": {"type": "null"},
+    "status": {"enum": ["COMPLETED", "QUARANTINED"]},
+    "decision": {"enum": ["HARD", "EASY", "ERROR"]},
+    "gate_decision": {"enum": ["PASS", "REJECT_TOO_EASY", "QUARANTINE"]},
+    "passes_prescreen": {"type": "boolean"},
+    "next_stage": {"enum": ["CONSISTENCY_REVIEW", null]},
+    "difficulty": {"enum": ["HARD", "EASY", "UNKNOWN"]},
+    "method": {"type": "string", "minLength": 1},
+    "issue_codes": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "error": {"type": ["string", "null"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"decision": {"const": "HARD"}}, "required": ["decision"]},
+      "then": {
+        "properties": {
+          "status": {"const": "COMPLETED"},
+          "gate_decision": {"const": "PASS"},
+          "passes_prescreen": {"const": true},
+          "next_stage": {"const": "CONSISTENCY_REVIEW"},
+          "difficulty": {"const": "HARD"},
+          "passrate": {"type": "null"},
+          "error": {"type": "null"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"decision": {"const": "EASY"}}, "required": ["decision"]},
+      "then": {
+        "properties": {
+          "status": {"const": "COMPLETED"},
+          "gate_decision": {"const": "REJECT_TOO_EASY"},
+          "passes_prescreen": {"const": false},
+          "next_stage": {"type": "null"},
+          "difficulty": {"const": "EASY"},
+          "passrate": {"type": "null"},
+          "error": {"type": "null"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"decision": {"const": "ERROR"}}, "required": ["decision"]},
+      "then": {
+        "properties": {
+          "status": {"const": "QUARANTINED"},
+          "gate_decision": {"const": "QUARANTINE"},
+          "passes_prescreen": {"const": false},
+          "next_stage": {"type": "null"},
+          "difficulty": {"const": "UNKNOWN"},
+          "passrate": {"type": "null"},
+          "error": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  ],
+  "additionalProperties": true
+}

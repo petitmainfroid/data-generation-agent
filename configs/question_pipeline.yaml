@@ -1,0 +1,66 @@
+schema_version: question_pipeline.v1
+pipeline_id: question_generation_audit_v1
+full_pipeline_enabled: false
+on_missing_stage: BLOCKED_NOT_IMPLEMENTED
+on_stage_error: QUARANTINED_TOOL_ERROR
+
+stages:
+  - stage_id: quality_review
+    order: 10
+    tool: lao_quality_review@1.0.0
+    implementation_status: ready
+    enabled: true
+    pass_condition:
+      status: COMPLETED
+      decision: ACCEPT
+
+  - stage_id: difficulty_prescreen
+    order: 20
+    tool: lao_difficulty_prescreen@1.0.0
+    implementation_status: pending_reverification
+    enabled: false
+    pass_condition:
+      status: COMPLETED
+      decision: HARD
+      gate_decision: PASS
+
+  - stage_id: consistency_review
+    order: 30
+    tool: consistency_review@0.0.0
+    implementation_status: placeholder
+    enabled: false
+
+  - stage_id: answer_synthesis
+    order: 40
+    tool: answer_synthesis@0.0.0
+    implementation_status: placeholder
+    enabled: false
+
+  - stage_id: qwen_passrate_review
+    order: 50
+    tool: qwen_passrate_review@0.0.0
+    implementation_status: placeholder
+    enabled: false
+    policy:
+      requested_trials: null
+      minimum_valid_trials: null
+      target_passrate_min: null
+      target_passrate_max: null
+
+  - stage_id: final_gate
+    order: 60
+    tool: final_gate@0.0.0
+    implementation_status: placeholder
+    enabled: false
+    required_stages:
+      - quality_review
+      - difficulty_prescreen
+      - consistency_review
+      - answer_synthesis
+      - qwen_passrate_review
+
+dataset_policies:
+  hard_question_v1:
+    difficulty_prescreen:
+      allowed_decisions: [HARD]
+      required_gate_decision: PASS

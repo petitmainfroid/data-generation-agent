@@ -1,0 +1,21 @@
+id: lao_quality_review
+version: "1.0.0"
+enabled: true
+purpose: "Run lao two-stage question quality review behind a normalized contract."
+command: "python -m data_generation_agent.tools.quality_review"
+input_schema: "contracts/question.schema.json"
+output_schema: "contracts/quality_review_result.schema.json"
+legacy_dependency: "LAOKUOYANG_ROOT or sibling ../laokuoyang"
+side_effects:
+  network: true
+  writable_paths: ["runs/"]
+permissions:
+  shell_for_agent: false
+  feishu: none
+resume:
+  legacy_key: "row_id"
+  harness_key: "input_hash + config_hash + prompt_hashes"
+activation_gate:
+  - "all offline tests pass"
+  - "prompt preflight passes"
+  - "bounded real API smoke passes"

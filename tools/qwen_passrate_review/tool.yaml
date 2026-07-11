@@ -1,0 +1,19 @@
+id: qwen_passrate_review
+version: "0.0.0"
+enabled: false
+implementation_status: placeholder
+purpose: "Run independent multi-trial Qwen evaluation against the synthesized answer."
+command: null
+input_schema: null
+output_schema: null
+side_effects:
+  network: true
+permissions:
+  feishu: none
+pipeline:
+  order: 50
+  next_stage: final_gate
+activation_gate:
+  - "trial count, grader policy, valid-trial minimum, and target band are configured"
+  - "user-provided implementation and contract are integrated"
+  - "offline, failure, resume, and bounded real smoke tests pass"

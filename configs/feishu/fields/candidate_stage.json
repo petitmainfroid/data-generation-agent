@@ -1,0 +1,1 @@
+{"name":"当前阶段","type":"select","multiple":false,"options":[{"name":"待处理"},{"name":"质量审核"},{"name":"难度粗筛"},{"name":"一致性检验"},{"name":"答案合成"},{"name":"Qwen Passrate"},{"name":"最终门禁"},{"name":"已完成"},{"name":"已拒绝"},{"name":"已隔离"}]}

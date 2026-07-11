@@ -1,0 +1,1 @@
+{"name":"文本编码状态","type":"select","multiple":false,"options":[{"name":"未检查"},{"name":"正常"},{"name":"疑似乱码"},{"name":"修复失败"}]}

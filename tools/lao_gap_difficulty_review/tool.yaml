@@ -1,0 +1,24 @@
+id: lao_legacy_gap_difficulty_review
+version: "1.0.0"
+enabled: false
+deprecated: true
+alias_for: "lao_difficulty_prescreen@1.0.0"
+purpose: "Compatibility alias only; use lao_difficulty_prescreen."
+command: "python -m data_generation_agent.tools.legacy_gap_difficulty_review"
+input_schema: "contracts/question.schema.json"
+output_schema: "contracts/difficulty_prescreen_result.schema.json"
+metric_type: "single_answer_pairwise_gap_prescreen"
+passrate_supported: false
+qwen_route: "judge gateway by default; --qwen-direct is the opt-out"
+legacy_dependency: "LAOKUOYANG_ROOT or sibling ../laokuoyang"
+side_effects:
+  network: true
+  writable_paths: ["runs/"]
+permissions:
+  shell_for_agent: false
+  feishu: none
+resume:
+  legacy_key: "sft_id"
+  harness_key: "input_hash + script_hash + model_config"
+activation_gate:
+  - "never enable this deprecated alias manifest"

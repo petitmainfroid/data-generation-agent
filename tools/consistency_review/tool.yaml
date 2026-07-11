@@ -1,0 +1,18 @@
+id: consistency_review
+version: "0.0.0"
+enabled: false
+implementation_status: placeholder
+purpose: "Check question, constraints, evidence, and answer consistency after difficulty prescreen."
+command: null
+input_schema: null
+output_schema: null
+side_effects:
+  network: true
+permissions:
+  feishu: none
+pipeline:
+  order: 30
+  next_stage: answer_synthesis
+activation_gate:
+  - "user-provided implementation and contract are integrated"
+  - "offline, failure, resume, and bounded real smoke tests pass"

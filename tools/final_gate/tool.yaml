@@ -1,0 +1,18 @@
+id: final_gate
+version: "0.0.0"
+enabled: false
+implementation_status: placeholder
+purpose: "Apply a deterministic final policy after every required stage has passed."
+command: null
+input_schema: null
+output_schema: null
+side_effects:
+  network: false
+permissions:
+  feishu: none
+pipeline:
+  order: 60
+  next_stage: null
+activation_gate:
+  - "all upstream tools and policies are versioned"
+  - "full fail-closed end-to-end tests pass"

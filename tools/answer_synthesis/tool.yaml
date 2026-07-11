@@ -1,0 +1,18 @@
+id: answer_synthesis
+version: "0.0.0"
+enabled: false
+implementation_status: placeholder
+purpose: "Synthesize a versioned reference answer after consistency passes."
+command: null
+input_schema: null
+output_schema: null
+side_effects:
+  network: true
+permissions:
+  feishu: none
+pipeline:
+  order: 40
+  next_stage: qwen_passrate_review
+activation_gate:
+  - "user-provided implementation and contract are integrated"
+  - "offline, failure, resume, and bounded real smoke tests pass"

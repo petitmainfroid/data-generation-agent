@@ -1,0 +1,1 @@
+{"name":"摄取状态","type":"select","multiple":false,"options":[{"name":"待处理"},{"name":"已摄取"},{"name":"数据错误"}]}

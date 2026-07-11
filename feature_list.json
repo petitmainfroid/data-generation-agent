@@ -1,0 +1,281 @@
+{
+  "project_goal": "Build a fail-closed, resumable data-generation agent that reads Feishu seeds and knowledge, generates or augments questions, runs the six-stage review pipeline, and writes allowlisted results and counters back to Feishu.",
+  "current_focus": "F007",
+  "last_updated": "2026-07-11",
+  "features": [
+    {
+      "id": "F001",
+      "title": "Audit lao review stages",
+      "status": "done",
+      "depends_on": [],
+      "acceptance": [
+        "The active quality and legacy difficulty entrypoints are identified.",
+        "Legacy decision semantics, artifacts, resume behavior, and risks are documented."
+      ],
+      "verification": ["Read-only source audit of laokuoyang modules and pipeline config."],
+      "notes": "Historical completed work. The old difficulty program is a one-shot prescreen, not passrate."
+    },
+    {
+      "id": "F002",
+      "title": "Extract quality review adapter",
+      "status": "done",
+      "depends_on": ["F001"],
+      "acceptance": [
+        "Active prompts preflight as strict YAML and valid output-schema JSON.",
+        "The legacy two-stage CLI returns normalized ACCEPT, REJECT, or ERROR records.",
+        "Conflicts, missing outputs, invalid responses, and duplicate input IDs fail closed."
+      ],
+      "verification": ["python -m pytest tests/test_quality_review.py", "Bounded synthetic real-API smoke recorded in progress.md"],
+      "notes": "Answer-key verification remains an unfinished quality precheck."
+    },
+    {
+      "id": "F003",
+      "title": "Extract the legacy one-shot difficulty adapter",
+      "status": "done",
+      "depends_on": ["F001"],
+      "acceptance": [
+        "The old program is callable behind a normalized contract.",
+        "The result exposes passrate as null and validates legacy scores."
+      ],
+      "verification": ["Historical adapter tests and bounded gateway smoke recorded in progress.md"],
+      "notes": "Superseded as a public name by F007; retained as a compatibility entrypoint only."
+    },
+    {
+      "id": "F004",
+      "title": "Establish initial offline adapter suite",
+      "status": "done",
+      "depends_on": ["F002", "F003"],
+      "acceptance": ["Initial quality and legacy-difficulty unit and integration tests pass without network access."],
+      "verification": ["Historical result: 10 passed"],
+      "notes": "Historical checkpoint; later semantic changes require their own verification feature."
+    },
+    {
+      "id": "F005",
+      "title": "Run initial bounded adapter smoke tests",
+      "status": "done",
+      "depends_on": ["F004"],
+      "acceptance": [
+        "Synthetic quality fixtures receive normalized terminal results.",
+        "One objective question completes through the previously verified gateway.",
+        "Repeated result IDs are stable and the recorded logs contain no detected secret."
+      ],
+      "verification": ["Historical commands and results in progress.md"],
+      "notes": "Does not activate the renamed difficulty-prescreen contract introduced later."
+    },
+    {
+      "id": "F006",
+      "title": "Create the project PRD and durable Harness specification",
+      "status": "done",
+      "depends_on": ["F001"],
+      "acceptance": [
+        "docs/PRD.md explains requirements, current repository state, architecture, permissions, memory, prompt composition, and Feishu synchronization.",
+        "Every product module has inputs, outputs, implementation steps, risks, dependencies, and Harness Definition of Done.",
+        "The PRD defines fail-closed release gates, recovery tests, milestones, terminal states, and unresolved user decisions.",
+        "feature_list.json, progress.md, README_AGENT.md, and pipeline config agree with the PRD."
+      ],
+      "verification": [
+        "Markdown structure and required-section scan",
+        "python -c YAML/JSON parse of configs and feature_list",
+        "python -m pytest -p no:cacheprovider"
+      ],
+      "notes": "Completed with 21 offline tests, JSON/YAML parsing, Python compilation, and Markdown fence validation."
+    },
+    {
+      "id": "F007",
+      "title": "Reverify lao_difficulty_prescreen v1",
+      "status": "todo",
+      "depends_on": ["F006"],
+      "acceptance": [
+        "HARD maps to gate PASS, EASY maps to REJECT_TOO_EASY, and errors quarantine.",
+        "passrate remains null for every outcome.",
+        "The verified judge gateway is the temporary default; direct Qwen routing is an explicit opt-out.",
+        "Offline, idempotency, bounded real smoke, and secret-scan evidence all pass before the manifest is enabled."
+      ],
+      "verification": [
+        "python -m pytest tests/test_legacy_gap_difficulty_review.py -p no:cacheprovider",
+        "Bounded one-question real smoke with default routing",
+        "Repeated-run result ID comparison",
+        "Secret-pattern scan of logs and artifacts"
+      ],
+      "notes": "Implementation and 16-test offline suite are partially complete; canonical manifest remains disabled pending full evidence."
+    },
+    {
+      "id": "F008",
+      "title": "Harden tool execution and secret boundaries",
+      "status": "todo",
+      "depends_on": ["F006"],
+      "acceptance": [
+        "Legacy subprocesses receive only allowlisted environment variables.",
+        "stdout, stderr, exceptions, and process metadata never expose configured secrets.",
+        "Disabled manifests are enforced by runtime code, and fixed command/path policies prevent arbitrary execution.",
+        "Input content changes cannot reuse stale legacy results."
+      ],
+      "verification": [
+        "Environment allowlist and fake-secret redaction tests",
+        "Disabled-tool and path-escape tests",
+        "Same-ID changed-content cache invalidation tests"
+      ],
+      "notes": "Production HTTP gateway trust and HTTPS/mTLS policy must be decided before production."
+    },
+    {
+      "id": "F009",
+      "title": "Build the durable Harness runtime",
+      "status": "todo",
+      "depends_on": ["F006", "F008"],
+      "acceptance": [
+        "SQLite stores jobs, candidates, revisions, attempts, events, artifacts, leases, budgets, trials, and outbox records.",
+        "The explicit state graph rejects disabled or missing required stages.",
+        "Crash recovery does not duplicate confirmed model calls or logical results.",
+        "CLI supports preflight, run, status, resume, retry, cancel, and reconcile."
+      ],
+      "verification": ["State-machine truth-table tests", "Crash injection at every commit boundary", "Concurrent lease and idempotency tests"],
+      "notes": "Start with SQLite/local artifacts; retain PostgreSQL/object-store interfaces."
+    },
+    {
+      "id": "F010",
+      "title": "Implement Feishu Base snapshot ingestion",
+      "status": "todo",
+      "depends_on": ["F009"],
+      "acceptance": [
+        "Only registered Base/table/view/fields can be read.",
+        "Pagination, retries, incremental cursors, source revisions, and immutable snapshots are supported.",
+        "Every source record is normalized or explicitly rejected."
+      ],
+      "verification": ["Mock pagination and 429 tests", "Development Base 3-10 row read-only smoke", "Snapshot row-count reconciliation"],
+      "notes": "A personal-account development Base with seed, candidate-result, and progress tables has been provisioned and read back. The ingestion adapter and test-record read/write Harness remain unimplemented."
+    },
+    {
+      "id": "F011",
+      "title": "Implement knowledge and persona snapshots",
+      "status": "todo",
+      "depends_on": ["F009"],
+      "acceptance": [
+        "Wiki/Docs content is frozen into versioned, citable knowledge chunks.",
+        "Persona templates are schema-validated, versioned generation constraints.",
+        "Retrieval is reproducible within a run and treats document text as untrusted data."
+      ],
+      "verification": ["Golden retrieval queries", "Citation reverse lookup", "Prompt-injection and permission-boundary tests"],
+      "notes": "Requires the user's approved knowledge scope and representative persona templates."
+    },
+    {
+      "id": "F012",
+      "title": "Integrate consistency review",
+      "status": "blocked",
+      "depends_on": ["F007", "F009"],
+      "acceptance": [
+        "Only quality-accepted, prescreen-passed revisions can run.",
+        "The tool returns exactly one PASS, FAIL, or ERROR with structured conflict evidence.",
+        "Missing inputs, evidence conflicts, and tool errors fail closed."
+      ],
+      "verification": ["Legacy-equivalence fixtures", "Mock failure and resume suite", "Bounded real smoke"],
+      "notes": "Blocked until the user supplies the existing program, invocation, fixtures, and intended consistency semantics."
+    },
+    {
+      "id": "F013",
+      "title": "Integrate reference-answer synthesis",
+      "status": "blocked",
+      "depends_on": ["F012"],
+      "acceptance": [
+        "Only consistency-PASS revisions can synthesize an answer.",
+        "The result is versioned, typed by question form, citable, and usable by the scorer.",
+        "Synthesis failure never creates an empty or implicit answer."
+      ],
+      "verification": ["Per-question-type answer contract tests", "Conflict and missing-evidence tests", "Bounded real smoke"],
+      "notes": "Blocked until the user supplies the existing synthesis program and expected output."
+    },
+    {
+      "id": "F014",
+      "title": "Integrate multi-trial Qwen passrate review",
+      "status": "blocked",
+      "depends_on": ["F013"],
+      "acceptance": [
+        "Every trial has a stable trial_id and can be resumed without duplicate execution.",
+        "Requested, completed, valid, passed, passrate, and uncertainty fields are reproducible from trial records.",
+        "Invalid outputs and insufficient valid trials cannot produce a passing difficulty decision."
+      ],
+      "verification": ["Trial aggregation tests", "Kill-and-resume tests", "Small real multi-trial smoke with budget cap"],
+      "notes": "Blocked until the program, trial count, grader policy, minimum valid trials, and per-dataset target bands are supplied."
+    },
+    {
+      "id": "F015",
+      "title": "Implement the deterministic final gate",
+      "status": "todo",
+      "depends_on": ["F014"],
+      "acceptance": [
+        "The gate uses no model or network.",
+        "Only same-revision, same-policy, valid passing results can emit FINAL_ACCEPTED.",
+        "Missing, stale, disabled, invalid, or error results produce explicit non-accept terminal states."
+      ],
+      "verification": ["Complete policy truth table", "No-network enforcement test", "Placeholder-present acceptance count equals zero"],
+      "notes": "This is the only component allowed to emit FINAL_ACCEPTED."
+    },
+    {
+      "id": "F016",
+      "title": "Implement Feishu allowlisted Outbox and counters",
+      "status": "todo",
+      "depends_on": ["F009", "F010"],
+      "acceptance": [
+        "Models and review tools cannot write Feishu directly.",
+        "Outbox patches only registered field IDs and is idempotent across retries and lost acknowledgements.",
+        "Per-batch, task-type, question-type, and stage pending/passed/rejected/quarantined counts rebuild from state events.",
+        "Development Base readback exactly matches local committed state."
+      ],
+      "verification": ["Mock partial-write tests", "Development Base write/read/retry/conflict smoke", "Full counter rebuild and zero-drift reconciliation"],
+      "notes": "Production writes remain disabled until a dedicated test Base and field allowlist are approved."
+    },
+    {
+      "id": "F017",
+      "title": "Implement question generation",
+      "status": "todo",
+      "depends_on": ["F009", "F011"],
+      "acceptance": [
+        "Generated candidates carry seed, persona, knowledge, policy, model, and Prompt provenance.",
+        "Generation never marks a candidate accepted and every candidate enters the review chain.",
+        "Idempotency, budget, diversity, and duplicate controls are enforced."
+      ],
+      "verification": ["Structured-output tests", "Two-seed/two-persona bounded pilot", "Duplicate and provenance audit"],
+      "notes": "Start with one question type and one persona family."
+    },
+    {
+      "id": "F018",
+      "title": "Implement controlled question augmentation",
+      "status": "todo",
+      "depends_on": ["F017"],
+      "acceptance": [
+        "Every child records parent lineage and a versioned transformation policy.",
+        "must_preserve, may_change, must_change, and forbidden mutations are validated.",
+        "Every child receives independent answer and review results."
+      ],
+      "verification": ["Parent/child constraint fixtures", "Sibling duplicate checks", "Two-parent bounded pilot"],
+      "notes": "Question-type-specific augmentation policies must be enabled independently."
+    },
+    {
+      "id": "F019",
+      "title": "Implement bounded Agentic repair",
+      "status": "todo",
+      "depends_on": ["F011", "F015", "F017"],
+      "acceptance": [
+        "Only allowlisted issue-code-to-action mappings can revise a candidate.",
+        "AUDIT_ONLY never changes a question.",
+        "Every repair creates a new revision and invalidates affected downstream results.",
+        "Attempt, token, cost, time, and no-progress limits terminate loops automatically."
+      ],
+      "verification": ["Per-issue repair fixtures", "Repeated-failure stop tests", "Revision invalidation and full re-review tests"],
+      "notes": "Tool or infrastructure errors are never repair prompts."
+    },
+    {
+      "id": "F020",
+      "title": "Pass full shadow, canary, release, and rollback validation",
+      "status": "todo",
+      "depends_on": ["F015", "F016", "F018", "F019"],
+      "acceptance": [
+        "Audit, generation, augmentation, repair, six-stage review, and Feishu synchronization pass end-to-end.",
+        "Crash/recovery, budget, security, secret scan, counter reconciliation, and semantic regression gates pass.",
+        "A structured release-evidence artifact binds code, Prompt, model, policy, knowledge, schema, and test hashes.",
+        "Rollback to the previous verified version is rehearsed without deleting history."
+      ],
+      "verification": ["Full offline E2E", "Bounded shadow and canary", "Zero-drift Feishu reconciliation", "Rollback rehearsal"],
+      "notes": "Only after this feature may configs/question_pipeline.yaml set full_pipeline_enabled to true."
+    }
+  ]
+}

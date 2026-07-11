@@ -1,0 +1,1 @@
+{"name":"一致性结论","type":"select","multiple":false,"options":[{"name":"通过"},{"name":"不一致"},{"name":"错误隔离"},{"name":"未执行"}]}

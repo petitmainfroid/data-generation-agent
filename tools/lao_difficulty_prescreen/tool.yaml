@@ -1,0 +1,35 @@
+id: lao_difficulty_prescreen
+version: "1.0.0"
+enabled: false
+purpose: "Coarsely screen difficulty using one GPT5.5 answer and one Qwen answer."
+command: "python -m data_generation_agent.tools.difficulty_prescreen"
+input_schema: "contracts/question.schema.json"
+output_schema: "contracts/difficulty_prescreen_result.schema.json"
+pipeline_stage: "DIFFICULTY_PRESCREEN"
+metric_type: "single_answer_pairwise_gap_prescreen"
+passrate_supported: false
+final_difficulty_metric: false
+must_not_substitute_for:
+  - qwen_passrate_review
+  - final_gate
+qwen_route: "judge gateway by default; --qwen-direct uses legacy QWEN_* variables"
+legacy_dependency: "LAOKUOYANG_ROOT or sibling ../laokuoyang"
+side_effects:
+  network: true
+  writable_paths: ["runs/"]
+permissions:
+  shell_for_agent: false
+  feishu: none
+pipeline:
+  order: 20
+  role: coarse_screen_only
+  pass_condition: "status == COMPLETED and gate_decision == PASS"
+  next_stage: consistency_review
+resume:
+  legacy_key: "sft_id"
+  harness_key: "input_hash + script_hash + objective_eval_hash + model_config"
+activation_gate:
+  - "all offline tests pass"
+  - "bounded real API smoke passes with the default gateway route"
+  - "repeated-run result IDs are stable"
+  - "secret-pattern scan passes"
