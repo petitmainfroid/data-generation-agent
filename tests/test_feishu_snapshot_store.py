@@ -153,7 +153,7 @@ def test_checkpoint_uses_cas_and_commit_clears_partial_state(tmp_path: Path) -> 
         connection.close()
 
 
-def test_migration_two_is_applied_and_idempotent(tmp_path: Path) -> None:
+def test_all_bundled_migrations_are_applied_and_idempotent(tmp_path: Path) -> None:
     connection = initialize_database(tmp_path / "harness.sqlite3")
     try:
         versions = [
@@ -162,12 +162,12 @@ def test_migration_two_is_applied_and_idempotent(tmp_path: Path) -> None:
                 "SELECT version FROM schema_migrations ORDER BY version"
             )
         ]
-        assert versions == [1, 2]
+        assert versions == [1, 2, 3]
     finally:
         connection.close()
     reopened = initialize_database(tmp_path / "harness.sqlite3")
     try:
-        assert reopened.execute("SELECT count(*) FROM schema_migrations").fetchone()[0] == 2
+        assert reopened.execute("SELECT count(*) FROM schema_migrations").fetchone()[0] == 3
     finally:
         reopened.close()
 

@@ -23,24 +23,19 @@
 - Consistency review, answer synthesis, real Qwen passrate, and the final gate
   are disabled placeholders. The full pipeline remains disabled and cannot
   emit `FINAL_ACCEPTED`.
-- Generation, augmentation, repair, durable state, Feishu ingestion, Outbox
-  synchronization, and counter reconciliation are planned but not implemented.
-- The public Git repository currently contains only its initial tracked README;
-  the current implementation and documents are uncommitted local changes.
+- Durable state, Feishu snapshot ingestion, allowlisted Outbox/counters, and
+  immutable knowledge/persona/Prompt compilation are implemented and tested.
+- Generation, augmentation, bounded repair, and the last four review stages
+  remain unfinished. The public branch is updated at each verified feature
+  checkpoint; the complete pipeline remains deliberately disabled.
 
 ## Current verification
 
-- Baseline before the prescreen semantic rename: `python -m pytest` -> **10 passed**.
-- Current offline suite after the prescreen rename:
-
-  ```powershell
-  $env:PYTHONDONTWRITEBYTECODE='1'
-  python -m pytest -p no:cacheprovider
-  ```
-
-  Result recorded during implementation: **16 passed**.
-- The current run must be repeated after PRD/Harness artifact synchronization;
-  F006 is not complete until the final verification is recorded below.
+- Latest full offline suite after F011: `python -m pytest -p no:cacheprovider`
+  -> **171 passed in 16.16s**.
+- F011 targeted knowledge/Prompt/schema suite -> **24 passed in 4.78s**.
+- Earlier smaller counts below are preserved as historical checkpoints, not as
+  the current completeness claim.
 
 ## Historical adapter evidence
 
@@ -353,3 +348,46 @@ Next:
 
 - F011: implement immutable knowledge/persona snapshots, safe retrieval, and
   the versioned Prompt compiler.
+
+## 2026-07-11 - F011 knowledge, persona, retrieval, and Prompt compiler complete
+
+Completed:
+
+- Added migration 3 for immutable knowledge snapshots/chunks, persona
+  snapshots, and Prompt compilation records backed by content-addressed
+  Artifacts.
+- Bound one source alias/revision and one persona ID/version to exactly one
+  immutable payload; in-place mutation fails before a new Artifact is written.
+- Added deterministic structure-preserving chunking, stable citations,
+  citation reverse lookup, keyword ranking with deterministic tie-breaking,
+  and an explicit approved-snapshot scope.
+- Added a strict persona v1 schema with canonical question-type enums, unknown
+  field rejection, duplicate/conflict checks, and stable snapshot identity.
+- Added a Prompt compiler that reconstructs every call from versioned durable
+  inputs. Persona text is a bounded constraint and knowledge is HTML-escaped,
+  marked `untrusted`, and annotated when prompt injection is suspected.
+- Prompt IDs bind the system policy, task/revision, persona, approved knowledge
+  scope, retrieved chunk identities/scores, feedback, output schema, and
+  citations. Artifact and database identity are verified on every replay.
+- Added a representative supply-chain persona plus a golden knowledge fixture
+  containing an adversarial instruction. Forbidden secret material is rejected
+  both during compilation and immediately before persistence.
+
+Verification:
+
+- `python -m compileall -q src tests` -> passed.
+- Targeted F011/schema regression suite -> **24 passed in 4.78s**.
+- Complete offline suite -> **171 passed in 16.16s**.
+- Registered development-Base identifier scan across every tracked/untracked
+  non-ignored project file -> **0 matches**; generic token patterns matched
+  only the deliberate fake-secret test fixtures.
+- Tests cover stable snapshots/ranking/Prompt IDs, citation reverse lookup,
+  source and persona version mutation, cross-database wiring, retrieval scope,
+  forged chunks, prompt injection, XML escaping, input-driven Prompt cache
+  invalidation, forbidden secrets, and immutable SQL triggers.
+
+Next:
+
+- F012: implement the normalized consistency-review stage from the reusable
+  legacy question/evidence checks, including fail-closed resume behavior and a
+  bounded real smoke before activation.

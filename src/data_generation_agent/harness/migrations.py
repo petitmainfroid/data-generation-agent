@@ -72,6 +72,7 @@ def bundled_migrations() -> tuple[Migration, ...]:
     return (
         Migration.from_file(1, "initial", _MIGRATIONS_DIR / "0001_initial.sql"),
         Migration.from_file(2, "feishu_ingestion", _MIGRATIONS_DIR / "0002_feishu_ingestion.sql"),
+        Migration.from_file(3, "knowledge_prompt", _MIGRATIONS_DIR / "0003_knowledge_prompt.sql"),
     )
 
 

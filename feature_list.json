@@ -1,6 +1,6 @@
 {
   "project_goal": "Build a fail-closed, resumable data-generation agent that reads Feishu seeds and knowledge, generates or augments questions, runs the six-stage review pipeline, and writes allowlisted results and counters back to Feishu.",
-  "current_focus": "F011",
+  "current_focus": "F012",
   "last_updated": "2026-07-11",
   "features": [
     {
@@ -147,7 +147,7 @@
     {
       "id": "F011",
       "title": "Implement knowledge and persona snapshots",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["F009"],
       "acceptance": [
         "Wiki/Docs content is frozen into versioned, citable knowledge chunks.",
@@ -155,12 +155,12 @@
         "Retrieval is reproducible within a run and treats document text as untrusted data."
       ],
       "verification": ["Golden retrieval queries", "Citation reverse lookup", "Prompt-injection and permission-boundary tests"],
-      "notes": "Requires the user's approved knowledge scope and representative persona templates."
+      "notes": "Completed with immutable source/persona versions, stable citations, deterministic scoped retrieval, untrusted-document handling, and content-addressed Prompt packages. A representative supply-chain persona and adversarial knowledge fixture provide the offline golden evidence; production scope remains a deployment input."
     },
     {
       "id": "F012",
       "title": "Integrate consistency review",
-      "status": "blocked",
+      "status": "todo",
       "depends_on": ["F007", "F009"],
       "acceptance": [
         "Only quality-accepted, prescreen-passed revisions can run.",
@@ -168,12 +168,12 @@
         "Missing inputs, evidence conflicts, and tool errors fail closed."
       ],
       "verification": ["Legacy-equivalence fixtures", "Mock failure and resume suite", "Bounded real smoke"],
-      "notes": "Blocked until the user supplies the existing program, invocation, fixtures, and intended consistency semantics."
+      "notes": "No complete legacy orchestrator was found. Build the normalized stage from the reusable question/evidence consistency components and verify its semantics in this Harness."
     },
     {
       "id": "F013",
       "title": "Integrate reference-answer synthesis",
-      "status": "blocked",
+      "status": "todo",
       "depends_on": ["F012"],
       "acceptance": [
         "Only consistency-PASS revisions can synthesize an answer.",
@@ -181,12 +181,12 @@
         "Synthesis failure never creates an empty or implicit answer."
       ],
       "verification": ["Per-question-type answer contract tests", "Conflict and missing-evidence tests", "Bounded real smoke"],
-      "notes": "Blocked until the user supplies the existing synthesis program and expected output."
+      "notes": "Compose the reusable GPT-5.5 answer generator behind a typed, citable, resumable synthesis contract with 32768 answer tokens."
     },
     {
       "id": "F014",
       "title": "Integrate multi-trial Qwen passrate review",
-      "status": "blocked",
+      "status": "todo",
       "depends_on": ["F013"],
       "acceptance": [
         "Every trial has a stable trial_id and can be resumed without duplicate execution.",
@@ -194,7 +194,7 @@
         "Invalid outputs and insufficient valid trials cannot produce a passing difficulty decision."
       ],
       "verification": ["Trial aggregation tests", "Kill-and-resume tests", "Small real multi-trial smoke with budget cap"],
-      "notes": "Blocked until the program, trial count, grader policy, minimum valid trials, and per-dataset target bands are supplied."
+      "notes": "Compose Qwen 32768-token trials and the DeepSeek scorer at concurrency 20; freeze trial count, validity minimum, grader policy, and dataset bands as versioned policy inputs."
     },
     {
       "id": "F015",
