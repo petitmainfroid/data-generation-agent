@@ -58,11 +58,13 @@ def test_quality_compiler_normalizes_all_terminal_cases(tmp_path: Path) -> None:
         [
             {
                 "row_id": "accepted",
+                "question": "synthetic question accepted",
                 "problem_category_keys": ["logical_reasoning"],
                 "stage1_reviews": {"logical_reasoning": accepted_review},
             },
             {
                 "row_id": "conflict",
+                "question": "synthetic question conflict",
                 "problem_category_keys": ["logical_reasoning"],
                 "stage1_reviews": {"logical_reasoning": accepted_review},
             },
@@ -73,6 +75,7 @@ def test_quality_compiler_normalizes_all_terminal_cases(tmp_path: Path) -> None:
         [
             {
                 "row_id": "rejected",
+                "question": "synthetic question rejected",
                 "reject_stage": "stage1",
                 "category": "logical_reasoning",
                 "review": _logical_review(accepted=False),
@@ -80,6 +83,7 @@ def test_quality_compiler_normalizes_all_terminal_cases(tmp_path: Path) -> None:
             },
             {
                 "row_id": "conflict",
+                "question": "synthetic question conflict",
                 "reject_stage": "stage1",
                 "category": "logical_reasoning",
                 "review": _logical_review(accepted=False),
@@ -126,6 +130,32 @@ def test_quality_response_rejects_score_decision_mismatch() -> None:
     review = _logical_review(accepted=False)
     review["final_decision"] = "ACCEPT"
     assert "decision_score_mismatch:ACCEPT!=REJECT" in validate_stage1_review(review)
+
+
+def test_quality_compiler_rejects_stale_same_id_result(tmp_path: Path) -> None:
+    input_path = tmp_path / "questions.jsonl"
+    atomic_write_jsonl(input_path, [_question("same")])
+    legacy = tmp_path / "legacy"
+    atomic_write_jsonl(
+        legacy / "final" / "accepted_dedup.jsonl",
+        [
+            {
+                "row_id": "same",
+                "question": "an older question with the same id",
+                "problem_category_keys": ["logical_reasoning"],
+                "stage1_reviews": {"logical_reasoning": _logical_review(accepted=True)},
+            }
+        ],
+    )
+    results, summary = compile_quality_results(
+        input_path=input_path,
+        legacy_output_dir=legacy,
+        normalized_output_dir=tmp_path / "normalized",
+        preflight=preflight_quality(LEGACY_ROOT),
+    )
+    assert results[0]["decision"] == "ERROR"
+    assert results[0]["issue_codes"] == ["STALE_LEGACY_RESULT"]
+    assert summary["complete"] is False
 
 
 def test_duplicate_candidate_ids_are_rejected(tmp_path: Path) -> None:

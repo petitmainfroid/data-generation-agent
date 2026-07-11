@@ -7,7 +7,7 @@ on_stage_error: QUARANTINED_TOOL_ERROR
 stages:
   - stage_id: quality_review
     order: 10
-    tool: lao_quality_review@1.0.0
+    tool: lao_quality_review@1.1.0
     implementation_status: ready
     enabled: true
     pass_condition:
@@ -16,7 +16,7 @@ stages:
 
   - stage_id: difficulty_prescreen
     order: 20
-    tool: lao_difficulty_prescreen@1.0.0
+    tool: lao_difficulty_prescreen@1.1.0
     implementation_status: pending_reverification
     enabled: false
     pass_condition:

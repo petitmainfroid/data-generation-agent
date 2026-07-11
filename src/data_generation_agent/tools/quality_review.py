@@ -26,7 +26,10 @@ from .common import (
 
 
 TOOL_ID = "lao_quality_review"
-TOOL_VERSION = "1.0.0"
+TOOL_VERSION = "1.1.0"
+QUALITY_ENV_ALLOWLIST = frozenset(
+    {"DEEPSEEK_API_KEY", "API_KEY", "OPENAI_API_KEY", "KIMI_API_KEY"}
+)
 
 ISSUE_CODE_MAP = {
     "supply_chain_relevance": "OUT_OF_DOMAIN",
@@ -314,6 +317,30 @@ def compile_quality_results(
                 "rejected": str(legacy_output_dir / "final" / "rejected_all.jsonl"),
             },
         }
+        legacy_terminal_rows = (
+            ([accepted[candidate_id]] if candidate_id in accepted else [])
+            + rejected.get(candidate_id, [])
+        )
+        stale_rows = [
+            row
+            for row in legacy_terminal_rows
+            if row.get("question") != source.get("question")
+        ]
+        if stale_rows:
+            results.append(
+                {
+                    **base,
+                    "status": "INVALID",
+                    "decision": "ERROR",
+                    "category_keys": [],
+                    "issue_codes": ["STALE_LEGACY_RESULT"],
+                    "rationales": {},
+                    "review": {},
+                    "repairable": None,
+                    "error": "legacy quality result question did not match the current input",
+                }
+            )
+            continue
         if candidate_id in accepted and candidate_id in rejected:
             results.append(
                 {
@@ -475,6 +502,7 @@ def run(args: argparse.Namespace) -> int:
             cwd=cwd,
             output_dir=output_dir,
             env_file=args.env_file,
+            allowed_env_keys=QUALITY_ENV_ALLOWLIST,
             timeout_seconds=args.timeout,
         )
     _, summary = compile_quality_results(

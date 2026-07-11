@@ -1,5 +1,5 @@
 id: lao_quality_review
-version: "1.0.0"
+version: "1.1.0"
 enabled: true
 purpose: "Run lao two-stage question quality review behind a normalized contract."
 command: "python -m data_generation_agent.tools.quality_review"
@@ -12,6 +12,12 @@ side_effects:
 permissions:
   shell_for_agent: false
   feishu: none
+environment:
+  allowed:
+    - DEEPSEEK_API_KEY
+    - API_KEY
+    - OPENAI_API_KEY
+    - KIMI_API_KEY
 resume:
   legacy_key: "row_id"
   harness_key: "input_hash + config_hash + prompt_hashes"

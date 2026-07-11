@@ -24,10 +24,22 @@ from .common import (
 
 
 TOOL_ID = "lao_difficulty_prescreen"
-TOOL_VERSION = "1.0.0"
+TOOL_VERSION = "1.1.0"
 SCHEMA_VERSION = "difficulty_prescreen_result.v1"
 PIPELINE_STAGE = "DIFFICULTY_PRESCREEN"
 SUBJECTIVE_QWEN_HARD_THRESHOLD = 40.0
+DIFFICULTY_ENV_ALLOWLIST = frozenset(
+    {
+        "DEEPSEEK_API_KEY",
+        "DEEPSEEK_BASE_URL",
+        "DEEPSEEK_MODEL",
+        "QWEN_API_KEY",
+        "QWEN_BASE_URL",
+        "QWEN_HELPER_API_KEY",
+        "QWEN_HELPER_BASE_URL",
+        "QWEN_MODEL",
+    }
+)
 
 
 def difficulty_paths(legacy_root: Path) -> tuple[Path, Path, Path]:
@@ -325,6 +337,27 @@ def compile_difficulty_results(
                 }
             )
             continue
+        if legacy.get("question") != source.get("question"):
+            results.append(
+                {
+                    **base,
+                    "status": "QUARANTINED",
+                    "decision": "ERROR",
+                    "gate_decision": "QUARANTINE",
+                    "passes_prescreen": False,
+                    "next_stage": None,
+                    "difficulty": "UNKNOWN",
+                    "method": "UNKNOWN",
+                    "gt_score": None,
+                    "qwen_score": None,
+                    "score_diff": None,
+                    "issue_codes": ["STALE_LEGACY_RESULT"],
+                    "reason": "",
+                    "model_versions": legacy.get("models", {}),
+                    "error": "legacy difficulty result question did not match the current input",
+                }
+            )
+            continue
         judgement = legacy.get("quality_gap_judgement")
         if not isinstance(judgement, dict):
             judgement = {}
@@ -462,11 +495,12 @@ def run(args: argparse.Namespace) -> int:
         inputs = inputs[: args.limit]
     legacy_output_dir = output_dir / "legacy"
     env_file = args.env_file.resolve() if args.env_file else Path("unused.env")
+    runtime_env_stub = output_dir / "runtime.empty.env"
     command, cwd = build_difficulty_command(
         input_path=input_path,
         legacy_output_dir=legacy_output_dir,
         legacy_root=legacy_root,
-        env_file=env_file,
+        env_file=runtime_env_stub,
         limit=args.limit,
         answer_max_tokens=args.answer_max_tokens,
         judge_max_tokens=args.judge_max_tokens,
@@ -493,12 +527,18 @@ def run(args: argparse.Namespace) -> int:
         return 0
     if not args.skip_run:
         overrides = qwen_routing_overrides(env_file, qwen_direct=args.qwen_direct)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        runtime_env_stub.write_text(
+            "# Secrets are injected through an allowlisted subprocess environment.\n",
+            encoding="utf-8",
+        )
         run_legacy_process(
             command,
             cwd=cwd,
             output_dir=output_dir,
             env_file=env_file,
             env_overrides=overrides,
+            allowed_env_keys=DIFFICULTY_ENV_ALLOWLIST,
             timeout_seconds=max(args.wall_timeout + 60, args.timeout + 60),
         )
     _, summary = compile_difficulty_results(

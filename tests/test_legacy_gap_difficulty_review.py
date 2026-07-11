@@ -177,6 +177,25 @@ def test_normalized_contract_rejects_gate_mapping_drift() -> None:
     assert "invalid_gate_mapping" in validate_prescreen_result(result)
 
 
+def test_prescreen_compiler_rejects_stale_same_id_result(tmp_path: Path) -> None:
+    input_path = tmp_path / "questions.jsonl"
+    legacy = tmp_path / "legacy"
+    atomic_write_jsonl(input_path, [_question("same")])
+    stale = _legacy_row("same", qwen_score=39, difficulty="hard")
+    stale["question"] = "an older question with the same id"
+    atomic_write_jsonl(legacy / "quality_gap_001.jsonl", [stale])
+    results, summary = compile_difficulty_results(
+        input_path=input_path,
+        legacy_output_dir=legacy,
+        normalized_output_dir=tmp_path / "normalized",
+        preflight=preflight_difficulty(LEGACY_ROOT),
+    )
+    assert results[0]["decision"] == "ERROR"
+    assert results[0]["gate_decision"] == "QUARANTINE"
+    assert results[0]["issue_codes"] == ["STALE_LEGACY_RESULT"]
+    assert summary["complete"] is False
+
+
 def test_runtime_route_changes_result_identity(tmp_path: Path) -> None:
     input_path = tmp_path / "questions.jsonl"
     legacy = tmp_path / "legacy"

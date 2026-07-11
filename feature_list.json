@@ -102,7 +102,7 @@
     {
       "id": "F008",
       "title": "Harden tool execution and secret boundaries",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["F006"],
       "acceptance": [
         "Legacy subprocesses receive only allowlisted environment variables.",
@@ -115,7 +115,7 @@
         "Disabled-tool and path-escape tests",
         "Same-ID changed-content cache invalidation tests"
       ],
-      "notes": "Production HTTP gateway trust and HTTPS/mTLS policy must be decided before production."
+      "notes": "Completed with allowlisted subprocess environments, uniform redaction, normalized timeout/errors, runtime manifest enforcement, path containment, and stale same-ID content detection. Production HTTP gateway trust and HTTPS/mTLS policy remains a deployment decision."
     },
     {
       "id": "F009",

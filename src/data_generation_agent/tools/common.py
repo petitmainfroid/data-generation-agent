@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -17,8 +18,44 @@ class ToolContractError(RuntimeError):
     """Raised when tool inputs or legacy outputs violate the public contract."""
 
 
-class LegacyProcessError(RuntimeError):
+class LegacyProcessError(ToolContractError):
     """Raised when a legacy subprocess exits unsuccessfully."""
+
+
+SAFE_INHERITED_ENV_KEYS = frozenset(
+    {
+        "APPDATA",
+        "COMSPEC",
+        "HOME",
+        "HOMEDRIVE",
+        "HOMEPATH",
+        "HTTPS_PROXY",
+        "HTTP_PROXY",
+        "LANG",
+        "LC_ALL",
+        "LOCALAPPDATA",
+        "NO_PROXY",
+        "NUMBER_OF_PROCESSORS",
+        "OS",
+        "PATH",
+        "PATHEXT",
+        "PROCESSOR_ARCHITECTURE",
+        "PROGRAMDATA",
+        "PROGRAMFILES",
+        "PROGRAMFILES(X86)",
+        "PROGRAMW6432",
+        "REQUESTS_CA_BUNDLE",
+        "SSL_CERT_FILE",
+        "SYSTEMDRIVE",
+        "SYSTEMROOT",
+        "TEMP",
+        "TMP",
+        "USERPROFILE",
+        "WINDIR",
+    }
+)
+
+_SECRET_NAME_MARKERS = ("KEY", "TOKEN", "SECRET", "PASSWORD", "CREDENTIAL")
 
 
 def utc_now() -> str:
@@ -127,6 +164,60 @@ def load_env_values(path: Path | None) -> dict[str, str]:
     return values
 
 
+def build_subprocess_environment(
+    *,
+    env_file: Path | None,
+    allowed_env_keys: set[str] | frozenset[str],
+    env_overrides: dict[str, str] | None = None,
+) -> tuple[dict[str, str], list[str]]:
+    """Build a minimal environment and return secret values for redaction."""
+
+    allowed = {key.upper() for key in allowed_env_keys}
+    overrides = env_overrides or {}
+    forbidden_overrides = sorted(key for key in overrides if key.upper() not in allowed)
+    if forbidden_overrides:
+        raise ToolContractError(
+            "environment override keys are not allowlisted: " + ", ".join(forbidden_overrides)
+        )
+
+    inherited = os.environ
+    environment = {
+        key: value
+        for key, value in inherited.items()
+        if key.upper() in SAFE_INHERITED_ENV_KEYS
+    }
+    configured = load_env_values(env_file)
+    for key in sorted(allowed):
+        if key in inherited:
+            environment[key] = inherited[key]
+        if key in configured:
+            environment[key] = configured[key]
+    environment.update(overrides)
+    environment.setdefault("PYTHONIOENCODING", "utf-8")
+    environment.setdefault("PYTHONUTF8", "1")
+
+    secret_values: list[str] = []
+    for key, value in environment.items():
+        if any(marker in key.upper() for marker in _SECRET_NAME_MARKERS) and len(value) >= 4:
+            secret_values.append(value)
+    return environment, sorted(set(secret_values), key=len, reverse=True)
+
+
+def redact_secrets(text: str, secret_values: list[str] | tuple[str, ...] = ()) -> str:
+    redacted = text or ""
+    for value in sorted(set(secret_values), key=len, reverse=True):
+        if value:
+            redacted = redacted.replace(value, "[REDACTED]")
+    patterns = (
+        (r"(?i)(authorization\s*[:=]\s*bearer\s+)[^\s\"']+", r"\1[REDACTED]"),
+        (r"(?i)((?:api[-_]?key|token|secret|password)\s*[:=]\s*)[^\s\"']+", r"\1[REDACTED]"),
+        (r"\bsk-[A-Za-z0-9_-]{8,}\b", "[REDACTED]"),
+    )
+    for pattern, replacement in patterns:
+        redacted = re.sub(pattern, replacement, redacted)
+    return redacted
+
+
 def run_legacy_process(
     command: list[str],
     *,
@@ -134,41 +225,63 @@ def run_legacy_process(
     output_dir: Path,
     env_file: Path | None = None,
     env_overrides: dict[str, str] | None = None,
+    allowed_env_keys: set[str] | frozenset[str] = frozenset(),
     timeout_seconds: int = 3600,
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
-    environment = os.environ.copy()
-    environment.update(load_env_values(env_file))
-    environment.update(env_overrides or {})
-    started_at = utc_now()
-    completed = subprocess.run(
-        command,
-        cwd=cwd,
-        env=environment,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=timeout_seconds,
-        check=False,
+    environment, secret_values = build_subprocess_environment(
+        env_file=env_file,
+        allowed_env_keys=allowed_env_keys,
+        env_overrides=env_overrides,
     )
-    (output_dir / "legacy.stdout.log").write_text(completed.stdout, encoding="utf-8")
-    (output_dir / "legacy.stderr.log").write_text(completed.stderr, encoding="utf-8")
+    started_at = utc_now()
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=cwd,
+            env=environment,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout_seconds,
+            check=False,
+        )
+        stdout = redact_secrets(completed.stdout, secret_values)
+        stderr = redact_secrets(completed.stderr, secret_values)
+        returncode: int | None = completed.returncode
+        timed_out = False
+    except subprocess.TimeoutExpired as exc:
+        raw_stdout = exc.stdout.decode("utf-8", errors="replace") if isinstance(exc.stdout, bytes) else (exc.stdout or "")
+        raw_stderr = exc.stderr.decode("utf-8", errors="replace") if isinstance(exc.stderr, bytes) else (exc.stderr or "")
+        stdout = redact_secrets(raw_stdout, secret_values)
+        stderr = redact_secrets(raw_stderr, secret_values)
+        returncode = None
+        timed_out = True
+
+    (output_dir / "legacy.stdout.log").write_text(stdout, encoding="utf-8")
+    (output_dir / "legacy.stderr.log").write_text(stderr, encoding="utf-8")
     atomic_write_json(
         output_dir / "legacy.process.json",
         {
             "started_at": started_at,
             "finished_at": utc_now(),
-            "returncode": completed.returncode,
+            "returncode": returncode,
+            "timed_out": timed_out,
             "python": sys.executable,
             "command": command,
+            "allowed_environment_keys": sorted({key.upper() for key in allowed_env_keys}),
             "environment_override_keys": sorted((env_overrides or {}).keys()),
         },
     )
-    if completed.returncode != 0:
-        tail = (completed.stderr or completed.stdout)[-1200:]
+    if timed_out:
         raise LegacyProcessError(
-            f"legacy process failed with exit code {completed.returncode}: {tail}"
+            f"legacy process exceeded timeout_seconds={timeout_seconds}"
+        )
+    if returncode != 0:
+        tail = (stderr or stdout)[-1200:]
+        raise LegacyProcessError(
+            f"legacy process failed with exit code {returncode}: {tail}"
         )
 
 

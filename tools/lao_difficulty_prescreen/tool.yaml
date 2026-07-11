@@ -1,5 +1,5 @@
 id: lao_difficulty_prescreen
-version: "1.0.0"
+version: "1.1.0"
 enabled: false
 purpose: "Coarsely screen difficulty using one GPT5.5 answer and one Qwen answer."
 command: "python -m data_generation_agent.tools.difficulty_prescreen"
@@ -20,6 +20,16 @@ side_effects:
 permissions:
   shell_for_agent: false
   feishu: none
+environment:
+  allowed:
+    - DEEPSEEK_BASE_URL
+    - DEEPSEEK_API_KEY
+    - DEEPSEEK_MODEL
+    - QWEN_BASE_URL
+    - QWEN_API_KEY
+    - QWEN_MODEL
+    - QWEN_HELPER_BASE_URL
+    - QWEN_HELPER_API_KEY
 pipeline:
   order: 20
   role: coarse_screen_only

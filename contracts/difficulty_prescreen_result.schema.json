@@ -26,7 +26,7 @@
   "properties": {
     "schema_version": {"const": "difficulty_prescreen_result.v1"},
     "tool_id": {"const": "lao_difficulty_prescreen"},
-    "tool_version": {"const": "1.0.0"},
+    "tool_version": {"const": "1.1.0"},
     "candidate_id": {"type": "string", "minLength": 1},
     "input_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "result_id": {"type": "string", "pattern": "^lao_difficulty_prescreen:[0-9a-f]{64}$"},

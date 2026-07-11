@@ -390,7 +390,7 @@ candidate_content_hash
 
 **目标**：判定题目是否成题、领域相关、条件完整、非开放且可验收，并在适用题型检查答案键/选项结构。
 
-**当前实现**：已抽取 `lao_quality_review@1.0.0`，保留旧两阶段分类和专项审核语义；答案键预检尚未接入统一工具。
+**当前实现**：已抽取 `lao_quality_review@1.1.0`，保留旧两阶段分类和专项审核语义；答案键预检尚未接入统一工具。
 **输入**：CandidateRevision 及题型所需字段。
 **输出**：`ACCEPT/REJECT/ERROR`、分类、结构化 issue codes、Prompt/模型摘要。
 **实施计划**：冻结旧 adapter golden；增加答案键预检；统一错误终态为 quarantine；增加五类题型金标；接状态库缓存。
@@ -400,7 +400,7 @@ candidate_content_hash
 
 **目标**：用一次 GPT-5.5 与一次 Qwen 作答差距快速过滤明显过易题，为昂贵的一致性和 Passrate 阶段节流。
 
-**当前实现**：`lao_difficulty_prescreen@1.0.0` 已完成新契约离线验证，仍禁用等待新真实烟测。Qwen 暂时默认复用已验证 judge gateway，`--qwen-direct` 仅为显式 opt-out。
+**当前实现**：`lao_difficulty_prescreen@1.1.0` 已完成新契约离线验证，仍禁用等待新真实烟测。Qwen 暂时默认复用已验证 judge gateway，`--qwen-direct` 仅为显式 opt-out。
 **输出语义**：
 
 ```text

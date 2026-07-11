@@ -17,8 +17,8 @@
   -> final_gate
   ```
 
-- `lao_quality_review@1.0.0` exists as an independently tested adapter.
-- `lao_difficulty_prescreen@1.0.0` has a new fail-closed contract and an
+- `lao_quality_review@1.1.0` exists as an independently tested adapter.
+- `lao_difficulty_prescreen@1.1.0` has a new fail-closed contract and an
   expanded offline suite, but its manifest remains disabled pending a fresh
   default-route real smoke, idempotency check, and secret scan.
 - Consistency review, answer synthesis, real Qwen passrate, and the final gate
@@ -157,3 +157,38 @@ Next Feishu step:
 - Implement F010 ingestion and then run the first controlled read-only test on
   one user-entered question. Do not test writeback until the Outbox and field
   allowlist exist.
+
+## 2026-07-11 - F008 tool execution boundary complete
+
+Completed:
+
+- Replaced whole-process environment inheritance with a minimal system
+  environment plus an explicit per-tool allowlist.
+- Prevented arbitrary `.env` variables such as `PYTHONPATH` and unrelated
+  secrets from reaching legacy subprocesses.
+- Added one redaction path for stdout, stderr, raised errors, Bearer/API-key
+  assignments, and common `sk-*` token shapes.
+- Standardized timeout and non-zero exit failures as `LegacyProcessError`.
+- The difficulty adapter now gives the legacy process an empty env-file stub;
+  actual approved credentials are injected only in memory.
+- Added a runtime Tool Registry that validates fixed module commands, schema
+  paths, environment policies, deprecated aliases, disabled tools, placeholders,
+  pipeline enablement, and path containment.
+- Added fail-closed stale-result detection when a legacy row has the same ID but
+  a different or missing question body.
+- Bumped the quality and difficulty-prescreen tool versions to `1.1.0`.
+
+Verification:
+
+- Targeted F008 suite: **28 passed in 4.62s**.
+- Complete suite during implementation: **33 passed in 7.13s**.
+- `git diff --check`: passed; only Windows LF/CRLF conversion notices.
+- Registry preflight tests prove the full pipeline remains disabled and
+  placeholders/disabled tools are not callable.
+- Secret scan only matched deliberately fake token fixtures in the redaction
+  tests; no external credential file or local Base profile is tracked.
+
+Next:
+
+- F007: run the hardened prescreen through the default gateway on one synthetic
+  question, rerun it for idempotency, scan artifacts, then decide activation.

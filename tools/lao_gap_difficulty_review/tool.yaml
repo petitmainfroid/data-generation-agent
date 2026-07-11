@@ -2,7 +2,7 @@ id: lao_legacy_gap_difficulty_review
 version: "1.0.0"
 enabled: false
 deprecated: true
-alias_for: "lao_difficulty_prescreen@1.0.0"
+alias_for: "lao_difficulty_prescreen@1.1.0"
 purpose: "Compatibility alias only; use lao_difficulty_prescreen."
 command: "python -m data_generation_agent.tools.legacy_gap_difficulty_review"
 input_schema: "contracts/question.schema.json"
