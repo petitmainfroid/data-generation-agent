@@ -32,8 +32,7 @@ def test_pipeline_config_is_canonical_and_fail_closed() -> None:
         "final_gate",
     ]
     assert [stage["order"] for stage in stages] == [10, 20, 30, 40, 50, 60]
-    assert all(stage["enabled"] is True for stage in stages[:5])
-    assert stages[5]["enabled"] is False
+    assert all(stage["enabled"] is True for stage in stages)
     passrate_policy = stages[4]["policy"]
     assert passrate_policy["qwen_answer_max_tokens"] == 32768
     assert passrate_policy["judge_concurrency"] == 20
@@ -78,17 +77,12 @@ def test_qwen_passrate_manifest_has_32k_answers_and_20_judges() -> None:
     assert manifest["judge_max_tokens_independent"] is True
 
 
-def test_placeholder_manifests_are_non_callable() -> None:
-    for tool_id in (
-        "final_gate",
-    ):
-        manifest = _yaml(f"tools/{tool_id}/tool.yaml")
-        assert manifest["id"] == tool_id
-        assert manifest["enabled"] is False
-        assert manifest["implementation_status"] == "placeholder"
-        assert manifest["command"] is None
-        assert manifest["input_schema"] is None
-        assert manifest["output_schema"] is None
+def test_final_gate_manifest_is_network_free_and_enabled() -> None:
+    manifest = _yaml("tools/final_gate/tool.yaml")
+    assert manifest["version"] == "1.0.0" and manifest["enabled"] is True
+    assert manifest["side_effects"]["network"] is False
+    assert (ROOT / manifest["input_schema"]).is_file()
+    assert (ROOT / manifest["output_schema"]).is_file()
 
 
 def test_feature_list_is_resumable_and_dependency_complete() -> None:

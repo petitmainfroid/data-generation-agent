@@ -20,10 +20,10 @@
 - `lao_quality_review@1.1.0` exists as an independently tested adapter.
 - `lao_difficulty_prescreen@1.1.0` is enabled after its fail-closed offline
   suite, bounded default-route real smoke, idempotency check, and secret scan.
-- The first five review stages through `qwen_passrate_review@1.0.0` are enabled
-  after offline, recovery, real-smoke, idempotency, and secret-scan gates. The
-  deterministic final gate remains disabled, so the full pipeline still cannot
-  emit `FINAL_ACCEPTED`.
+- All six review tools through the network-free `final_gate@1.0.0` are
+  implemented and individually enabled. The release switch
+  `full_pipeline_enabled` remains false until generation, augmentation, repair,
+  and F020 end-to-end canary/rollback gates pass.
 - Durable state, Feishu snapshot ingestion, allowlisted Outbox/counters, and
   immutable knowledge/persona/Prompt compilation are implemented and tested.
 - Generation, augmentation, bounded repair, and the last four review stages
@@ -32,10 +32,10 @@
 
 ## Current verification
 
-- Latest full offline suite after F014: `python -m pytest -p no:cacheprovider`
-  -> **210 passed in 17.56s**.
-- F014 final targeted passrate/schema/registry/Harness suite -> **45 passed in
-  4.02s**.
+- Latest full offline suite after F015: `python -m pytest -p no:cacheprovider`
+  -> **223 passed in 15.24s**.
+- F015 targeted final-gate/passrate/registry/Harness suite -> **41 passed in
+  5.94s**.
 - Earlier smaller counts below are preserved as historical checkpoints, not as
   the current completeness claim.
 
@@ -520,3 +520,41 @@ Next:
 - F015: implement the network-free deterministic final truth table. It must
   bind all five same-revision stage results and remain the only code path that
   can emit `FINAL_ACCEPTED`.
+
+## 2026-07-11 - F015 deterministic final gate activated
+
+Completed:
+
+- Implemented `final_gate@1.0.0` as a pure deterministic function with no model,
+  provider, filesystem discovery, or network dependency.
+- The gate pins all five upstream tool versions and requires every result
+  envelope to carry the same candidate revision and final-policy digest.
+- The complete truth table distinguishes missing stages, stale revisions,
+  policy/tool-version mismatch, upstream tool errors, business rejection, and
+  invalid cross-stage evidence.
+- The synthesis reference-answer hash must exactly equal the Passrate GT hash.
+  Requested/completed/valid/passed trial counts, minimum valid count, reported
+  passrate arithmetic, and target band are independently revalidated.
+- Only this module can return `FINAL_ACCEPTED`; every placeholder, missing, old,
+  invalid, error, or rejected input produces an explicit non-accept terminal
+  state. The complete pipeline release switch intentionally remains false.
+- Hardened the F014 result contract to expose `minimum_valid_trials`, then
+  re-aggregated the live two-trial canary without any new Qwen/Judge call.
+
+Verification:
+
+- Targeted final-gate/passrate/registry/Harness suite -> **41 passed in 5.94s**.
+- Complete offline suite -> **223 passed in 15.24s**.
+- Truth-table tests cover nine independent mutation classes plus every missing
+  and placeholder stage; acceptance count across placeholder/missing cases is
+  exactly zero.
+- A no-network test replaces both socket creation and `urlopen` with immediate
+  failures; the valid gate evaluation still succeeds with `network_used=false`.
+- Source scan confirms no other model-facing tool contains the
+  `FINAL_ACCEPTED` emission token.
+
+Next:
+
+- F017: implement one-question grounded generation with seed/persona/knowledge,
+  structured output, provenance, budget/idempotency/duplicate controls, and
+  mandatory entry into the six-stage review chain.

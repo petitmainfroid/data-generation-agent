@@ -1,6 +1,6 @@
 {
   "project_goal": "Build a fail-closed, resumable data-generation agent that reads Feishu seeds and knowledge, generates or augments questions, runs the six-stage review pipeline, and writes allowlisted results and counters back to Feishu.",
-  "current_focus": "F015",
+  "current_focus": "F017",
   "last_updated": "2026-07-11",
   "features": [
     {
@@ -199,7 +199,7 @@
     {
       "id": "F015",
       "title": "Implement the deterministic final gate",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["F014"],
       "acceptance": [
         "The gate uses no model or network.",
@@ -207,7 +207,7 @@
         "Missing, stale, disabled, invalid, or error results produce explicit non-accept terminal states."
       ],
       "verification": ["Complete policy truth table", "No-network enforcement test", "Placeholder-present acceptance count equals zero"],
-      "notes": "This is the only component allowed to emit FINAL_ACCEPTED."
+      "notes": "Completed as final_gate@1.0.0 with a network-free truth table binding all five same-revision, same-policy, pinned-version results. It is the only model tool allowed to emit FINAL_ACCEPTED; full_pipeline_enabled remains false until F020."
     },
     {
       "id": "F016",

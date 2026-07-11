@@ -1,18 +1,22 @@
 id: final_gate
-version: "0.0.0"
-enabled: false
-implementation_status: placeholder
-purpose: "Apply a deterministic final policy after every required stage has passed."
-command: null
-input_schema: null
-output_schema: null
+version: "1.0.0"
+enabled: true
+purpose: "Apply the network-free deterministic final truth table."
+command: "python -m data_generation_agent.tools.final_gate"
+input_schema: "contracts/final_gate_input.schema.json"
+output_schema: "contracts/final_gate_result.schema.json"
+pipeline_stage: "FINAL_GATE"
 side_effects:
   network: false
 permissions:
+  shell_for_agent: false
   feishu: none
 pipeline:
   order: 60
+  pass_condition: "terminal_decision == FINAL_ACCEPTED"
   next_stage: null
 activation_gate:
-  - "all upstream tools and policies are versioned"
-  - "full fail-closed end-to-end tests pass"
+  - "complete policy truth table passes"
+  - "same revision, policy, tool versions, and reference answer are enforced"
+  - "no-network test passes"
+  - "placeholder or missing stage acceptance count is zero"

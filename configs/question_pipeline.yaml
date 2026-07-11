@@ -59,15 +59,21 @@ stages:
 
   - stage_id: final_gate
     order: 60
-    tool: final_gate@0.0.0
-    implementation_status: placeholder
-    enabled: false
+    tool: final_gate@1.0.0
+    implementation_status: ready
+    enabled: true
     required_stages:
       - quality_review
       - difficulty_prescreen
       - consistency_review
       - answer_synthesis
       - qwen_passrate_review
+    policy:
+      policy_id: hard_question_final_gate
+      version: "1.0.0"
+      require_same_revision: true
+      require_same_policy_digest: true
+      require_pinned_tool_versions: true
 
 dataset_policies:
   hard_question_v1:
