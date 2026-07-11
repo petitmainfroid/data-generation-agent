@@ -27,6 +27,8 @@ def test_registry_loads_real_manifests_and_enforces_disabled_tools() -> None:
     consistency = registry.get("consistency_review", require_enabled=True)
     assert consistency.qualified_id == "consistency_review@1.0.0"
     assert "DEEPSEEK_API_KEY" in consistency.environment_allowlist
+    synthesis = registry.get("answer_synthesis", require_enabled=True)
+    assert synthesis.qualified_id == "answer_synthesis@1.0.0"
     with pytest.raises(DisabledToolError):
         registry.get("lao_legacy_gap_difficulty_review", require_enabled=True)
 

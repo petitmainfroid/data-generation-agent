@@ -35,9 +35,12 @@ stages:
 
   - stage_id: answer_synthesis
     order: 40
-    tool: answer_synthesis@0.0.0
-    implementation_status: placeholder
-    enabled: false
+    tool: answer_synthesis@1.0.0
+    implementation_status: ready
+    enabled: true
+    pass_condition:
+      status: COMPLETED
+      decision: SYNTHESIZED
 
   - stage_id: qwen_passrate_review
     order: 50

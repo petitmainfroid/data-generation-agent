@@ -20,6 +20,7 @@ lao-quality-review = "data_generation_agent.tools.quality_review:main"
 lao-difficulty-prescreen = "data_generation_agent.tools.difficulty_prescreen:main"
 lao-gap-difficulty-review = "data_generation_agent.tools.legacy_gap_difficulty_review:main"
 consistency-review = "data_generation_agent.tools.consistency_review:main"
+answer-synthesis = "data_generation_agent.tools.answer_synthesis:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

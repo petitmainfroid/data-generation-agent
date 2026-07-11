@@ -1,6 +1,6 @@
 {
   "project_goal": "Build a fail-closed, resumable data-generation agent that reads Feishu seeds and knowledge, generates or augments questions, runs the six-stage review pipeline, and writes allowlisted results and counters back to Feishu.",
-  "current_focus": "F013",
+  "current_focus": "F014",
   "last_updated": "2026-07-11",
   "features": [
     {
@@ -173,7 +173,7 @@
     {
       "id": "F013",
       "title": "Integrate reference-answer synthesis",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["F012"],
       "acceptance": [
         "Only consistency-PASS revisions can synthesize an answer.",
@@ -181,7 +181,7 @@
         "Synthesis failure never creates an empty or implicit answer."
       ],
       "verification": ["Per-question-type answer contract tests", "Conflict and missing-evidence tests", "Bounded real smoke"],
-      "notes": "Compose the reusable GPT-5.5 answer generator behind a typed, citable, resumable synthesis contract with 32768 answer tokens."
+      "notes": "Completed as answer_synthesis@1.0.0 with typed answers, approved citations, same-revision consistency gating, fixed GPT-5.5 32768-token requests, durable resume, and a stable real smoke."
     },
     {
       "id": "F014",

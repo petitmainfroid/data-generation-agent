@@ -1,18 +1,26 @@
 id: answer_synthesis
-version: "0.0.0"
-enabled: false
-implementation_status: placeholder
-purpose: "Synthesize a versioned reference answer after consistency passes."
-command: null
-input_schema: null
-output_schema: null
+version: "1.0.0"
+enabled: true
+purpose: "Synthesize a typed, citable reference answer after consistency passes."
+command: "python -m data_generation_agent.tools.answer_synthesis"
+input_schema: "contracts/answer_synthesis_input.schema.json"
+output_schema: "contracts/answer_synthesis_result.schema.json"
+pipeline_stage: "ANSWER_SYNTHESIS"
+answer_max_tokens: 32768
 side_effects:
   network: true
+  writable_paths: ["runs/"]
 permissions:
+  shell_for_agent: false
   feishu: none
+environment:
+  allowed: [DEEPSEEK_BASE_URL, DEEPSEEK_API_KEY]
 pipeline:
   order: 40
+  pass_condition: "status == COMPLETED and decision == SYNTHESIZED"
   next_stage: qwen_passrate_review
 activation_gate:
-  - "user-provided implementation and contract are integrated"
-  - "offline, failure, resume, and bounded real smoke tests pass"
+  - "typed/citation/failure/resume offline tests pass"
+  - "GPT-5.5 requests use exactly 32768 max tokens"
+  - "bounded real smoke and stable repeat pass"
+  - "secret scan passes"

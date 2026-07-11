@@ -20,10 +20,10 @@
 - `lao_quality_review@1.1.0` exists as an independently tested adapter.
 - `lao_difficulty_prescreen@1.1.0` is enabled after its fail-closed offline
   suite, bounded default-route real smoke, idempotency check, and secret scan.
-- `consistency_review@1.0.0` is enabled after offline, recovery, real-smoke,
-  idempotency, and secret-scan gates. Answer synthesis, real Qwen passrate, and
-  the final gate remain disabled placeholders, so the full pipeline cannot emit
-  `FINAL_ACCEPTED`.
+- `consistency_review@1.0.0` and `answer_synthesis@1.0.0` are enabled after
+  offline, recovery, real-smoke, idempotency, and secret-scan gates. Real Qwen
+  passrate and the final gate remain disabled placeholders, so the full
+  pipeline cannot emit `FINAL_ACCEPTED`.
 - Durable state, Feishu snapshot ingestion, allowlisted Outbox/counters, and
   immutable knowledge/persona/Prompt compilation are implemented and tested.
 - Generation, augmentation, bounded repair, and the last four review stages
@@ -32,9 +32,9 @@
 
 ## Current verification
 
-- Latest full offline suite after F012: `python -m pytest -p no:cacheprovider`
-  -> **188 passed in 20.16s**.
-- F012 targeted consistency/registry/Harness suite -> **33 passed in 2.11s**.
+- Latest full offline suite after F013: `python -m pytest -p no:cacheprovider`
+  -> **200 passed in 13.72s**.
+- F013 targeted synthesis/registry suite -> **23 passed in 1.62s**.
 - Earlier smaller counts below are preserved as historical checkpoints, not as
   the current completeness claim.
 
@@ -431,3 +431,40 @@ Next:
 - F013: implement typed, citable GPT-5.5 reference-answer synthesis with a
   fixed 32768-token answer budget, same-revision upstream gating, durable
   result identity, and a bounded real smoke.
+
+## 2026-07-11 - F013 reference-answer synthesis activated
+
+Completed:
+
+- Implemented `answer_synthesis@1.0.0` with strict question-form typing:
+  choice, numeric, structured, or text answers are enforced from the canonical
+  question type rather than trusted from model output.
+- Only a same-revision `consistency_review` PASS can invoke GPT-5.5. Evidence
+  hashes and citations are verified before the call; returned citations must be
+  a non-empty subset of the approved evidence.
+- Every answer request uses exactly **32768 max tokens**. Empty answers,
+  unknown citations, wrong answer types, invalid JSON, or gateway errors fail
+  closed and never create an implicit reference answer.
+- Result identity binds the revision, evidence, upstream consistency result,
+  model/Prompt configuration, answer type, answer text, and citations. Atomic
+  persistence supports error retry, terminal reuse, crash recovery, and stale
+  same-revision content rejection.
+- Enabled only the synthesis node; the full pipeline remains disabled until
+  real multi-trial passrate and the deterministic final gate are verified.
+
+Verification:
+
+- Targeted synthesis/registry suite -> **23 passed in 1.62s**.
+- Complete offline suite -> **200 passed in 13.72s**.
+- One synthetic real GPT-5.5 request returned a typed text answer, reasoning,
+  and exactly the approved citation; the provider reported model
+  `gpt-5.5-2026-04-24` and the recorded request limit is 32768.
+- Repeating the smoke preserved the exact results-file hash.
+- Exact configured-secret scan across project files plus the real-smoke run
+  directory -> **0 matches**.
+
+Next:
+
+- F014: implement durable independent Qwen trials, DeepSeek scoring at
+  concurrency 20, aggregate valid/pass counts and passrate, enforce the full
+  composite trial key, and run a small budget-capped real smoke.

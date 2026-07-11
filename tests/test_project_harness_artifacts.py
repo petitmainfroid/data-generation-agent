@@ -32,8 +32,8 @@ def test_pipeline_config_is_canonical_and_fail_closed() -> None:
         "final_gate",
     ]
     assert [stage["order"] for stage in stages] == [10, 20, 30, 40, 50, 60]
-    assert all(stage["enabled"] is True for stage in stages[:3])
-    assert all(stage["enabled"] is False for stage in stages[3:])
+    assert all(stage["enabled"] is True for stage in stages[:4])
+    assert all(stage["enabled"] is False for stage in stages[4:])
     passrate_policy = stages[4]["policy"]
     assert all(value is None for value in passrate_policy.values())
 
@@ -60,9 +60,16 @@ def test_consistency_manifest_is_implemented_and_enabled() -> None:
     assert (ROOT / manifest["output_schema"]).is_file()
 
 
+def test_answer_synthesis_manifest_is_implemented_and_32k() -> None:
+    manifest = _yaml("tools/answer_synthesis/tool.yaml")
+    assert manifest["version"] == "1.0.0" and manifest["enabled"] is True
+    assert manifest["answer_max_tokens"] == 32768
+    assert (ROOT / manifest["input_schema"]).is_file()
+    assert (ROOT / manifest["output_schema"]).is_file()
+
+
 def test_placeholder_manifests_are_non_callable() -> None:
     for tool_id in (
-        "answer_synthesis",
         "qwen_passrate_review",
         "final_gate",
     ):
