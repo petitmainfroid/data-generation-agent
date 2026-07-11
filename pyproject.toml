@@ -21,6 +21,7 @@ lao-difficulty-prescreen = "data_generation_agent.tools.difficulty_prescreen:mai
 lao-gap-difficulty-review = "data_generation_agent.tools.legacy_gap_difficulty_review:main"
 consistency-review = "data_generation_agent.tools.consistency_review:main"
 answer-synthesis = "data_generation_agent.tools.answer_synthesis:main"
+qwen-passrate-review = "data_generation_agent.tools.qwen_passrate_review:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

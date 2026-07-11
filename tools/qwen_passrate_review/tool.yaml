@@ -1,19 +1,32 @@
 id: qwen_passrate_review
-version: "0.0.0"
-enabled: false
-implementation_status: placeholder
-purpose: "Run independent multi-trial Qwen evaluation against the synthesized answer."
-command: null
-input_schema: null
-output_schema: null
+version: "1.0.0"
+enabled: true
+purpose: "Run independent Qwen answers and grade each against GPT-5.5 GT."
+command: "python -m data_generation_agent.tools.qwen_passrate_review"
+input_schema: "contracts/qwen_passrate_input.schema.json"
+output_schema: "contracts/qwen_passrate_result.schema.json"
+pipeline_stage: "QWEN_PASSRATE_REVIEW"
+qwen_answer_max_tokens: 32768
+judge_model: deepseek-v4-flash
+judge_concurrency: 20
+judge_max_tokens_independent: true
 side_effects:
   network: true
+  writable_paths: ["runs/"]
 permissions:
+  shell_for_agent: false
   feishu: none
+environment:
+  allowed: [QWEN_BASE_URL, QWEN_API_KEY, QWEN_MODEL, DEEPSEEK_BASE_URL, DEEPSEEK_API_KEY, DEEPSEEK_MODEL]
 pipeline:
   order: 50
+  pass_condition: "decision == PASS and completed_trials == requested_trials and valid_trials >= minimum_valid_trials"
   next_stage: final_gate
+resume:
+  composite_key: [candidate_id, revision_id, reference_answer_hash, qwen_config_hash, judge_config_hash, trial_index]
 activation_gate:
-  - "trial count, grader policy, valid-trial minimum, and target band are configured"
-  - "user-provided implementation and contract are integrated"
-  - "offline, failure, resume, and bounded real smoke tests pass"
+  - "Qwen answers use 32768 max tokens"
+  - "DeepSeek judge runs at concurrency 20 with an independent max_tokens"
+  - "trial crash/retry/resume, aggregation, and scoring-Prompt tests pass"
+  - "two-trial real canary and idempotent repeat pass"
+  - "secret scan passes"

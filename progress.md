@@ -20,10 +20,10 @@
 - `lao_quality_review@1.1.0` exists as an independently tested adapter.
 - `lao_difficulty_prescreen@1.1.0` is enabled after its fail-closed offline
   suite, bounded default-route real smoke, idempotency check, and secret scan.
-- `consistency_review@1.0.0` and `answer_synthesis@1.0.0` are enabled after
-  offline, recovery, real-smoke, idempotency, and secret-scan gates. Real Qwen
-  passrate and the final gate remain disabled placeholders, so the full
-  pipeline cannot emit `FINAL_ACCEPTED`.
+- The first five review stages through `qwen_passrate_review@1.0.0` are enabled
+  after offline, recovery, real-smoke, idempotency, and secret-scan gates. The
+  deterministic final gate remains disabled, so the full pipeline still cannot
+  emit `FINAL_ACCEPTED`.
 - Durable state, Feishu snapshot ingestion, allowlisted Outbox/counters, and
   immutable knowledge/persona/Prompt compilation are implemented and tested.
 - Generation, augmentation, bounded repair, and the last four review stages
@@ -32,9 +32,10 @@
 
 ## Current verification
 
-- Latest full offline suite after F013: `python -m pytest -p no:cacheprovider`
-  -> **200 passed in 13.72s**.
-- F013 targeted synthesis/registry suite -> **23 passed in 1.62s**.
+- Latest full offline suite after F014: `python -m pytest -p no:cacheprovider`
+  -> **210 passed in 17.56s**.
+- F014 final targeted passrate/schema/registry/Harness suite -> **45 passed in
+  4.02s**.
 - Earlier smaller counts below are preserved as historical checkpoints, not as
   the current completeness claim.
 
@@ -468,3 +469,54 @@ Next:
 - F014: implement durable independent Qwen trials, DeepSeek scoring at
   concurrency 20, aggregate valid/pass counts and passrate, enforce the full
   composite trial key, and run a small budget-capped real smoke.
+
+## 2026-07-11 - F014 durable Qwen Passrate review activated
+
+Completed:
+
+- Added migration 4 with durable `passrate_trials` and immutable
+  `passrate_results`. Trial identity binds candidate, revision, GPT-5.5 answer
+  hash, Qwen config hash, Judge config hash, and trial index.
+- Qwen answers are generated independently with exactly **32768 max tokens**.
+  Each answer becomes an Artifact before its trial advances to
+  `ANSWER_CONFIRMED`; a crash at that boundary resumes at Judge only.
+- Vendored the `gemini-gt-qwen-evaluator` DeepSeek scoring Prompt byte-for-byte
+  from its UTF-8 reference. It grades Qwen against GPT-5.5 GT, never the old
+  pairwise gap output.
+- DeepSeek v4 Flash scoring uses fixed concurrency **20** and an independently
+  configured 2048-token Judge budget. Worker threads perform only remote calls
+  and pure parsing; all SQLite/Artifact commits stay on the main thread.
+- Invalid or empty GT blocks every call. Empty Qwen output is still sent to the
+  Judge as required. Score/grade/`can_accept` disagreements, invalid JSON, and
+  missing trials fail closed.
+- Aggregation reports requested/completed/valid/passed trials, passrate,
+  average/median, grade counts, score buckets, and a versioned target band.
+  Default hard-question policy is 5 requested, 3 minimum valid, and passrate
+  0.2–0.8.
+- Empty/placeholder Qwen credentials fall back as explicitly requested to the
+  previously verified shared model gateway; no credential enters artifacts or
+  output.
+
+Verification:
+
+- Final targeted passrate/schema/registry/Harness suite -> **45 passed in
+  4.02s**.
+- Complete offline suite -> **210 passed in 17.56s**.
+- Offline tests cover composite-key invalidation, 32k enforcement, exact Prompt
+  identity, Judge concurrency, crash after answer confirmation, Judge-only
+  retry, empty Qwen scoring, invalid GT blocking, distribution aggregation,
+  target-band rejection, immutable rows, and cross-database wiring.
+- Real canary: 2 requested / 2 completed / 2 valid / 2 passed, passrate 1.0,
+  Qwen max tokens 32768, Judge max tokens 2048, Judge concurrency 20.
+- The canary used target band 0–1 only to verify mechanics. Under the production
+  0.2–0.8 band the same synthetic item is correctly rejected as too easy.
+- Repeat canary preserved the summary hash and counts exactly: 5 Artifacts,
+  2 trials, 1 aggregate result; no model call was duplicated.
+- Exact configured-secret scan across project files and the canary run -> **0
+  matches**.
+
+Next:
+
+- F015: implement the network-free deterministic final truth table. It must
+  bind all five same-revision stage results and remain the only code path that
+  can emit `FINAL_ACCEPTED`.

@@ -44,14 +44,18 @@ stages:
 
   - stage_id: qwen_passrate_review
     order: 50
-    tool: qwen_passrate_review@0.0.0
-    implementation_status: placeholder
-    enabled: false
+    tool: qwen_passrate_review@1.0.0
+    implementation_status: ready
+    enabled: true
     policy:
-      requested_trials: null
-      minimum_valid_trials: null
-      target_passrate_min: null
-      target_passrate_max: null
+      requested_trials: 5
+      minimum_valid_trials: 3
+      target_passrate_min: 0.2
+      target_passrate_max: 0.8
+      qwen_answer_max_tokens: 32768
+      judge_model: deepseek-v4-flash
+      judge_max_tokens: 2048
+      judge_concurrency: 20
 
   - stage_id: final_gate
     order: 60
@@ -70,3 +74,8 @@ dataset_policies:
     difficulty_prescreen:
       allowed_decisions: [HARD]
       required_gate_decision: PASS
+    qwen_passrate_review:
+      requested_trials: 5
+      minimum_valid_trials: 3
+      target_passrate_min: 0.2
+      target_passrate_max: 0.8

@@ -32,10 +32,12 @@ def test_pipeline_config_is_canonical_and_fail_closed() -> None:
         "final_gate",
     ]
     assert [stage["order"] for stage in stages] == [10, 20, 30, 40, 50, 60]
-    assert all(stage["enabled"] is True for stage in stages[:4])
-    assert all(stage["enabled"] is False for stage in stages[4:])
+    assert all(stage["enabled"] is True for stage in stages[:5])
+    assert stages[5]["enabled"] is False
     passrate_policy = stages[4]["policy"]
-    assert all(value is None for value in passrate_policy.values())
+    assert passrate_policy["qwen_answer_max_tokens"] == 32768
+    assert passrate_policy["judge_concurrency"] == 20
+    assert passrate_policy["judge_max_tokens"] != 32768
 
 
 def test_prescreen_manifest_matches_source_and_is_enabled_after_reverification() -> None:
@@ -68,9 +70,16 @@ def test_answer_synthesis_manifest_is_implemented_and_32k() -> None:
     assert (ROOT / manifest["output_schema"]).is_file()
 
 
+def test_qwen_passrate_manifest_has_32k_answers_and_20_judges() -> None:
+    manifest = _yaml("tools/qwen_passrate_review/tool.yaml")
+    assert manifest["version"] == "1.0.0" and manifest["enabled"] is True
+    assert manifest["qwen_answer_max_tokens"] == 32768
+    assert manifest["judge_concurrency"] == 20
+    assert manifest["judge_max_tokens_independent"] is True
+
+
 def test_placeholder_manifests_are_non_callable() -> None:
     for tool_id in (
-        "qwen_passrate_review",
         "final_gate",
     ):
         manifest = _yaml(f"tools/{tool_id}/tool.yaml")

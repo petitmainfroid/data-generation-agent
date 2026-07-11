@@ -1,6 +1,6 @@
 {
   "project_goal": "Build a fail-closed, resumable data-generation agent that reads Feishu seeds and knowledge, generates or augments questions, runs the six-stage review pipeline, and writes allowlisted results and counters back to Feishu.",
-  "current_focus": "F014",
+  "current_focus": "F015",
   "last_updated": "2026-07-11",
   "features": [
     {
@@ -186,7 +186,7 @@
     {
       "id": "F014",
       "title": "Integrate multi-trial Qwen passrate review",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["F013"],
       "acceptance": [
         "Every trial has a stable trial_id and can be resumed without duplicate execution.",
@@ -194,7 +194,7 @@
         "Invalid outputs and insufficient valid trials cannot produce a passing difficulty decision."
       ],
       "verification": ["Trial aggregation tests", "Kill-and-resume tests", "Small real multi-trial smoke with budget cap"],
-      "notes": "Compose Qwen 32768-token trials and the DeepSeek scorer at concurrency 20; freeze trial count, validity minimum, grader policy, and dataset bands as versioned policy inputs."
+      "notes": "Completed as qwen_passrate_review@1.0.0 with durable composite-keyed Qwen 32k trials, the exact DeepSeek scoring Prompt at concurrency 20, resumable answer/judge commits, deterministic aggregation, and a two-trial real canary."
     },
     {
       "id": "F015",

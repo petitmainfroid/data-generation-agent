@@ -41,6 +41,8 @@ EXPECTED_TABLES = {
     "knowledge_chunks",
     "persona_snapshots",
     "prompt_compilations",
+    "passrate_trials",
+    "passrate_results",
 }
 
 
@@ -116,10 +118,10 @@ def test_initialize_database_configures_pragmas_and_all_tables(tmp_path: Path) -
             )
         }
         assert EXPECTED_TABLES <= tables
-        assert current_schema_version(connection) == 3
-        assert [row.version for row in applied_migrations(connection)] == [1, 2, 3]
+        assert current_schema_version(connection) == 4
+        assert [row.version for row in applied_migrations(connection)] == [1, 2, 3, 4]
         assert apply_migrations(connection) == []
-        assert connection.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0] == 3
+        assert connection.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0] == 4
     finally:
         connection.close()
 
