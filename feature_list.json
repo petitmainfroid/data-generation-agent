@@ -83,7 +83,7 @@
     {
       "id": "F007",
       "title": "Reverify lao_difficulty_prescreen v1",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["F006"],
       "acceptance": [
         "HARD maps to gate PASS, EASY maps to REJECT_TOO_EASY, and errors quarantine.",
@@ -97,7 +97,7 @@
         "Repeated-run result ID comparison",
         "Secret-pattern scan of logs and artifacts"
       ],
-      "notes": "Implementation and 16-test offline suite are partially complete; canonical manifest remains disabled pending full evidence."
+      "notes": "Activated after a bounded default-gateway smoke, stable result-id/one-row resume check, 17 targeted tests, and a zero-match scan across 16 runtime artifacts."
     },
     {
       "id": "F008",

@@ -18,9 +18,8 @@
   ```
 
 - `lao_quality_review@1.1.0` exists as an independently tested adapter.
-- `lao_difficulty_prescreen@1.1.0` has a new fail-closed contract and an
-  expanded offline suite, but its manifest remains disabled pending a fresh
-  default-route real smoke, idempotency check, and secret scan.
+- `lao_difficulty_prescreen@1.1.0` is enabled after its fail-closed offline
+  suite, bounded default-route real smoke, idempotency check, and secret scan.
 - Consistency review, answer synthesis, real Qwen passrate, and the final gate
   are disabled placeholders. The full pipeline remains disabled and cannot
   emit `FINAL_ACCEPTED`.
@@ -190,5 +189,30 @@ Verification:
 
 Next:
 
-- F007: run the hardened prescreen through the default gateway on one synthetic
-  question, rerun it for idempotency, scan artifacts, then decide activation.
+- F009: build the SQLite durable Harness, transactional state graph, immutable
+  artifacts, leases, budgets, Outbox, and resumable CLI.
+
+## 2026-07-11 - F007 difficulty prescreen activated
+
+Completed:
+
+- Ran one synthetic objective question through the hardened adapter using the
+  default judge-gateway route and 32,768-token answer/Judge limits.
+- The real run completed `1/1`, mapped `EASY` to `REJECT_TOO_EASY`, returned no
+  error, and kept `passrate` null as required for a one-shot coarse screen.
+- Repeated the exact run against the same output directory. The normalized
+  `result_id` was unchanged and the legacy judgement file remained one row.
+- Enabled only `lao_difficulty_prescreen@1.1.0`; the complete pipeline remains
+  fail-closed because the later four stages are still disabled.
+
+Verification:
+
+- Targeted prescreen/security tests: **17 passed in 2.56s**.
+- Runtime scan: **16 files**, **0 approved-secret value matches**, and **0
+  generic token-pattern matches**.
+- The real normalized result had `status=COMPLETED`, default gateway routing,
+  and `gate_decision=REJECT_TOO_EASY`.
+
+Next:
+
+- F009: implement and fault-test the durable Harness runtime.

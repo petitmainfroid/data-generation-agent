@@ -17,8 +17,8 @@ stages:
   - stage_id: difficulty_prescreen
     order: 20
     tool: lao_difficulty_prescreen@1.1.0
-    implementation_status: pending_reverification
-    enabled: false
+    implementation_status: ready
+    enabled: true
     pass_condition:
       status: COMPLETED
       decision: HARD

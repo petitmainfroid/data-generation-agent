@@ -32,16 +32,17 @@ def test_pipeline_config_is_canonical_and_fail_closed() -> None:
         "final_gate",
     ]
     assert [stage["order"] for stage in stages] == [10, 20, 30, 40, 50, 60]
-    assert all(stage["enabled"] is False for stage in stages[1:])
+    assert all(stage["enabled"] is True for stage in stages[:2])
+    assert all(stage["enabled"] is False for stage in stages[2:])
     passrate_policy = stages[4]["policy"]
     assert all(value is None for value in passrate_policy.values())
 
 
-def test_prescreen_manifest_matches_source_and_remains_disabled_pending_reverification() -> None:
+def test_prescreen_manifest_matches_source_and_is_enabled_after_reverification() -> None:
     manifest = _yaml("tools/lao_difficulty_prescreen/tool.yaml")
     assert manifest["id"] == TOOL_ID
     assert manifest["version"] == TOOL_VERSION
-    assert manifest["enabled"] is False
+    assert manifest["enabled"] is True
     assert manifest["command"] == "python -m data_generation_agent.tools.difficulty_prescreen"
     assert (ROOT / manifest["input_schema"]).is_file()
     assert (ROOT / manifest["output_schema"]).is_file()

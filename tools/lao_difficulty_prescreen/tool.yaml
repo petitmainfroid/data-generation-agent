@@ -1,6 +1,6 @@
 id: lao_difficulty_prescreen
 version: "1.1.0"
-enabled: false
+enabled: true
 purpose: "Coarsely screen difficulty using one GPT5.5 answer and one Qwen answer."
 command: "python -m data_generation_agent.tools.difficulty_prescreen"
 input_schema: "contracts/question.schema.json"
