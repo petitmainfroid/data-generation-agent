@@ -68,6 +68,17 @@ Lifecycle commands are:
 data-agent run | status | resume | retry | cancel | reconcile
 ```
 
+Read a registered Feishu seed table into a durable snapshot:
+
+```powershell
+data-agent ingest --project-root . `
+  --profile configs/feishu/dev_base_profile.local.json `
+  --db runs/dev/harness.sqlite3 `
+  --artifact-root runs/dev/artifacts
+```
+
+See `docs/FEISHU_INGESTION.md` for the local profile and resume contract.
+
 `run` fails with `BLOCKED_NOT_IMPLEMENTED` before creating a Job while the
 complete pipeline is disabled. `retry` accepts only failures durably marked as
 retryable; business rejects cannot be retried through this command.

@@ -134,7 +134,7 @@
     {
       "id": "F010",
       "title": "Implement Feishu Base snapshot ingestion",
-      "status": "todo",
+      "status": "in_progress",
       "depends_on": ["F009"],
       "acceptance": [
         "Only registered Base/table/view/fields can be read.",
@@ -142,7 +142,7 @@
         "Every source record is normalized or explicitly rejected."
       ],
       "verification": ["Mock pagination and 429 tests", "Development Base 3-10 row read-only smoke", "Snapshot row-count reconciliation"],
-      "notes": "A personal-account development Base with seed, candidate-result, and progress tables has been provisioned and read back. The ingestion adapter and test-record read/write Harness remain unimplemented."
+      "notes": "Allowlisted, paginated, crash-resumable ingestion and immutable snapshot storage are implemented. The personal development seed table is reachable but currently has 0 records; the required 3-10 row live read will be completed through the F016 allowlisted Outbox test writer before marking this feature done."
     },
     {
       "id": "F011",

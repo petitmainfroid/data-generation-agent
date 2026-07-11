@@ -1,0 +1,20 @@
+{
+  "schema_version": "feishu_base_profile.v1",
+  "base_alias": "development",
+  "environment": "development",
+  "identity": "user",
+  "base_token": "replace-locally",
+  "base_url": null,
+  "tables": {
+    "seeds": {
+      "table_id": "tblREPLACE",
+      "name": "种子题",
+      "user_entry_field": "question",
+      "fields": {
+        "question": "fldQUESTION",
+        "sft_id": "fldSFTID"
+      },
+      "views": {}
+    }
+  }
+}

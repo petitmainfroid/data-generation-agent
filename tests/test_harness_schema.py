@@ -112,10 +112,10 @@ def test_initialize_database_configures_pragmas_and_all_tables(tmp_path: Path) -
             )
         }
         assert EXPECTED_TABLES <= tables
-        assert current_schema_version(connection) == 1
-        assert [row.version for row in applied_migrations(connection)] == [1]
+        assert current_schema_version(connection) == 2
+        assert [row.version for row in applied_migrations(connection)] == [1, 2]
         assert apply_migrations(connection) == []
-        assert connection.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0] == 1
+        assert connection.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0] == 2
     finally:
         connection.close()
 

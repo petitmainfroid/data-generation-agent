@@ -16,6 +16,9 @@ from data_generation_agent.harness.registry import (
     resolve_within,
 )
 from data_generation_agent.harness.service import HarnessService, HarnessServiceError
+from data_generation_agent.feishu.models import FeishuIngestionError
+from data_generation_agent.feishu.profile import BaseProfileError
+from data_generation_agent.feishu.runtime import ingest_registered_source
 from data_generation_agent.tools.common import redact_secrets
 
 
@@ -44,6 +47,13 @@ def build_parser() -> argparse.ArgumentParser:
     common = _common_parser()
 
     commands.add_parser("preflight", parents=[common])
+
+    ingest = commands.add_parser("ingest", parents=[common])
+    ingest.add_argument("--profile", type=Path, required=True)
+    ingest.add_argument("--table-alias", default="seeds")
+    ingest.add_argument("--view-alias")
+    ingest.add_argument("--source-id")
+    ingest.add_argument("--page-size", type=int, default=100)
 
     run = commands.add_parser("run", parents=[common])
     run.add_argument("--job-id", required=True)
@@ -164,6 +174,20 @@ def run_command(args: argparse.Namespace) -> int:
     if args.command == "status":
         _emit(_status_read_only(database, args.job_id))
         return EXIT_OK
+    if args.command == "ingest":
+        profile = resolve_within(root, args.profile, must_exist=True)
+        _emit(
+            ingest_registered_source(
+                profile_path=profile,
+                database_path=database,
+                artifact_root=artifacts,
+                table_alias=args.table_alias,
+                source_id=args.source_id,
+                view_alias=args.view_alias,
+                page_size=args.page_size,
+            )
+        )
+        return EXIT_OK
 
     if args.command == "run":
         registry = ToolRegistry.load(root)
@@ -212,7 +236,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             }
         )
         return EXIT_BLOCKED
-    except (ToolRegistryError, HarnessServiceError, ValueError, sqlite3.IntegrityError) as exc:
+    except (
+        ToolRegistryError,
+        HarnessServiceError,
+        FeishuIngestionError,
+        BaseProfileError,
+        ValueError,
+        sqlite3.IntegrityError,
+    ) as exc:
         _emit({"ok": False, "status": "REJECTED", "error": redact_secrets(str(exc))})
         return EXIT_NOT_FOUND_OR_CONFLICT
     except sqlite3.DatabaseError as exc:

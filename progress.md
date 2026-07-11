@@ -263,3 +263,43 @@ Next:
 
 - F010: implement registered Feishu Base snapshot ingestion and run a bounded
   read-only smoke against the personal development Base.
+
+## 2026-07-11 - F010 ingestion implementation checkpoint
+
+Implemented:
+
+- Added an ignored local Base profile contract with Base/table/view/field alias
+  allowlists and token-safe representations/errors.
+- Added a fixed `lark-cli` read client. On Windows it invokes the installed
+  Node entrypoint directly with `shell=False`, avoiding `.cmd` shell execution.
+- Added strict parsing for the real columnar `record-list` envelope, field
+  projection, identity, parallel-array lengths, offsets, duplicates, 429/5xx
+  bounded retry, and no-progress pagination.
+- Added normalization for required questions, optional user `sft_id`, content
+  hashes, record revisions, encoding errors, and explicit rejected records.
+- Added migration 2 for immutable source snapshots/revisions/rejections and CAS
+  ingestion cursors. Each page is checkpointed as an immutable artifact before
+  advancing the offset; crash/restart resumes without rereading prior pages.
+- Added `data-agent ingest` and public local-profile/operation documentation.
+
+Verification so far:
+
+- F010 profile/client/ingestion/snapshot/runtime/schema suite: **60 passed**
+  before the final boundary additions; all subsequent targeted regressions are
+  also green.
+- Fault tests cover 429, malformed envelopes, array-length mismatches, stale
+  cursors, crash after page one, payload/relational divergence, forged content
+  hashes, wrong database wiring, credential echo, and immutable history.
+- Real personal-Base field read: 12 registered seed fields, identity matched,
+  zero records, `has_more=false`.
+- Real `data-agent ingest` produced one immutable zero-record snapshot; repeat
+  returned `created=false`. Two local runtime files contained **0** matches for
+  the registered token/table/field values.
+
+Not complete yet:
+
+- The Harness acceptance criterion requires a 3-10 record real read. The
+  development seed table is empty. Do not bypass the Outbox boundary with a
+  direct ad-hoc write; F016 will first implement and test the field-allowlisted
+  writer, use it to add bounded synthetic seeds, and then close F010 with a
+  non-empty read/readback reconciliation.
