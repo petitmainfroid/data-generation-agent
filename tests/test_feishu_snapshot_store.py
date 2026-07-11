@@ -162,12 +162,12 @@ def test_all_bundled_migrations_are_applied_and_idempotent(tmp_path: Path) -> No
                 "SELECT version FROM schema_migrations ORDER BY version"
             )
         ]
-        assert versions == [1, 2, 3, 4]
+        assert versions == [1, 2, 3, 4, 5]
     finally:
         connection.close()
     reopened = initialize_database(tmp_path / "harness.sqlite3")
     try:
-        assert reopened.execute("SELECT count(*) FROM schema_migrations").fetchone()[0] == 4
+        assert reopened.execute("SELECT count(*) FROM schema_migrations").fetchone()[0] == 5
     finally:
         reopened.close()
 

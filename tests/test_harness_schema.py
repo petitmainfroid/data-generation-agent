@@ -43,6 +43,8 @@ EXPECTED_TABLES = {
     "prompt_compilations",
     "passrate_trials",
     "passrate_results",
+    "generation_runs",
+    "generated_question_registry",
 }
 
 
@@ -118,10 +120,10 @@ def test_initialize_database_configures_pragmas_and_all_tables(tmp_path: Path) -
             )
         }
         assert EXPECTED_TABLES <= tables
-        assert current_schema_version(connection) == 4
-        assert [row.version for row in applied_migrations(connection)] == [1, 2, 3, 4]
+        assert current_schema_version(connection) == 5
+        assert [row.version for row in applied_migrations(connection)] == [1, 2, 3, 4, 5]
         assert apply_migrations(connection) == []
-        assert connection.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0] == 4
+        assert connection.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0] == 5
     finally:
         connection.close()
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import html
 import json
 import sqlite3
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Mapping, Sequence
 
@@ -38,6 +38,7 @@ class PromptRequest:
     retrieved_chunks: tuple[RetrievedChunk, ...]
     issue_feedback: tuple[Mapping[str, Any], ...]
     output_schema: Mapping[str, Any]
+    untrusted_context: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         for name in ("task_mode", "candidate_revision_id", "persona_snapshot_id"):
@@ -53,6 +54,7 @@ class PromptRequest:
         if any(item.chunk.snapshot_id not in approved for item in self.retrieved_chunks):
             raise KnowledgeContractError("retrieved chunk is outside approved scope")
         canonical_json(dict(self.output_schema))
+        canonical_json(dict(self.untrusted_context))
         for feedback in self.issue_feedback:
             canonical_json(dict(feedback))
         object.__setattr__(self, "task_instruction", instruction)
@@ -128,6 +130,7 @@ class PromptCompiler:
             )
         feedback_json = canonical_json([dict(item) for item in request.issue_feedback])
         schema_json = canonical_json(dict(request.output_schema))
+        context_json = canonical_json(dict(request.untrusted_context))
         user_prompt = "\n\n".join(
             [
                 f"<task mode=\"{html.escape(request.task_mode)}\" "
@@ -140,6 +143,7 @@ class PromptCompiler:
                 + "</approved_knowledge_scope>",
                 "\n".join(knowledge_parts) if knowledge_parts else "<knowledge none=\"true\" />",
                 f"<issue_feedback>{html.escape(feedback_json)}</issue_feedback>",
+                f'<task_context untrusted="true">{html.escape(context_json)}</task_context>',
                 f"<required_output_schema>{html.escape(schema_json)}</required_output_schema>",
                 "Return only one JSON value matching required_output_schema.",
             ]
@@ -162,6 +166,7 @@ class PromptCompiler:
                 )
             ),
             "feedback": digest_text(feedback_json),
+            "untrusted_context": digest_text(context_json),
             "output_schema": digest_text(schema_json),
         }
         material = canonical_json(

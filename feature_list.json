@@ -1,6 +1,6 @@
 {
   "project_goal": "Build a fail-closed, resumable data-generation agent that reads Feishu seeds and knowledge, generates or augments questions, runs the six-stage review pipeline, and writes allowlisted results and counters back to Feishu.",
-  "current_focus": "F017",
+  "current_focus": "F018",
   "last_updated": "2026-07-11",
   "features": [
     {
@@ -226,7 +226,7 @@
     {
       "id": "F017",
       "title": "Implement question generation",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["F009", "F011"],
       "acceptance": [
         "Generated candidates carry seed, persona, knowledge, policy, model, and Prompt provenance.",
@@ -234,7 +234,7 @@
         "Idempotency, budget, diversity, and duplicate controls are enforced."
       ],
       "verification": ["Structured-output tests", "Two-seed/two-persona bounded pilot", "Duplicate and provenance audit"],
-      "notes": "Start with one question type and one persona family."
+      "notes": "Completed as question_generation@1.0.0 for one grounded candidate per seed/persona request, with untrusted seed context, immutable Prompt provenance, token budgets, crash resume, exact duplicate registry, mandatory quality-review entry, and a 2x2 real pilot."
     },
     {
       "id": "F018",

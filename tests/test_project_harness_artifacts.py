@@ -85,6 +85,13 @@ def test_final_gate_manifest_is_network_free_and_enabled() -> None:
     assert (ROOT / manifest["output_schema"]).is_file()
 
 
+def test_generation_manifest_cannot_accept_and_enters_quality_review() -> None:
+    manifest = _yaml("tools/question_generation/tool.yaml")
+    assert manifest["enabled"] is True and manifest["version"] == "1.0.0"
+    assert manifest["pipeline"]["may_accept_candidate"] is False
+    assert manifest["pipeline"]["next_stage"] == "quality_review"
+
+
 def test_feature_list_is_resumable_and_dependency_complete() -> None:
     feature_list = json.loads((ROOT / "feature_list.json").read_text(encoding="utf-8"))
     features = feature_list["features"]

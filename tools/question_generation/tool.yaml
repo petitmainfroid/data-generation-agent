@@ -1,0 +1,25 @@
+id: question_generation
+version: "1.0.0"
+enabled: true
+purpose: "Generate one grounded candidate with immutable provenance and mandatory review entry."
+command: "python -m data_generation_agent.tools.question_generation"
+input_schema: "contracts/question_generation_input.schema.json"
+output_schema: "contracts/question_generation_result.schema.json"
+side_effects:
+  network: true
+  writable_paths: ["runs/"]
+permissions:
+  shell_for_agent: false
+  feishu: none
+pipeline:
+  next_stage: quality_review
+  may_accept_candidate: false
+resume:
+  key: "job + seed + persona + knowledge scope + policy + Prompt"
+activation_gate:
+  - "structured output, provenance, budget, duplicate, and crash tests pass"
+  - "two-seed/two-persona bounded real pilot passes"
+  - "repeat pilot creates no new calls or records"
+  - "secret scan passes"
+environment:
+  allowed: [DEEPSEEK_BASE_URL, DEEPSEEK_API_KEY]

@@ -23,6 +23,7 @@ consistency-review = "data_generation_agent.tools.consistency_review:main"
 answer-synthesis = "data_generation_agent.tools.answer_synthesis:main"
 qwen-passrate-review = "data_generation_agent.tools.qwen_passrate_review:main"
 final-gate = "data_generation_agent.tools.final_gate:main"
+question-generation = "data_generation_agent.tools.question_generation:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -32,10 +32,10 @@
 
 ## Current verification
 
-- Latest full offline suite after F015: `python -m pytest -p no:cacheprovider`
-  -> **223 passed in 15.24s**.
-- F015 targeted final-gate/passrate/registry/Harness suite -> **41 passed in
-  5.94s**.
+- Latest full offline suite after F017: `python -m pytest -p no:cacheprovider`
+  -> **232 passed in 15.72s**.
+- F017 final targeted generation/Prompt/schema/registry suite -> **46 passed in
+  6.07s**.
 - Earlier smaller counts below are preserved as historical checkpoints, not as
   the current completeness claim.
 
@@ -558,3 +558,56 @@ Next:
 - F017: implement one-question grounded generation with seed/persona/knowledge,
   structured output, provenance, budget/idempotency/duplicate controls, and
   mandatory entry into the six-stage review chain.
+
+## 2026-07-11 - F017 grounded question generation activated
+
+Completed:
+
+- Added migration 5 with durable generation runs and an immutable global exact
+  question registry. Generation identity binds Job, seed content, requested
+  type, persona snapshot, knowledge scope, and policy/model configuration.
+- Extended Prompt packages with an explicit HTML-escaped
+  `task_context untrusted=true`. Seed text can inform generation but cannot
+  become system authority; its hash also invalidates Prompt identity.
+- Implemented `question_generation@1.0.0` for one grounded structured candidate.
+  Returned type and citations are checked against the requested type and
+  approved retrieved chunks; persona question-type scope is enforced.
+- Prompt, model response, result, seed/persona/knowledge lineage, policy/model
+  hashes, constraint coverage, and generation rationale are all durable
+  Artifacts or relational provenance.
+- Token budgets are reserved atomically before a call, consumed after a
+  confirmed response, released on retryable gateway failure, and converted to
+  `BUDGET_EXHAUSTED` without calling the model when insufficient.
+- Crash after response confirmation resumes from the Artifact without a second
+  model call. Retryable transport errors can retry; invalid structured output
+  is terminal and never creates a Revision.
+- Global exact duplicates become `REJECTED_DUPLICATE`. Successful candidates
+  become `QUALITY_REVIEW`; the generator always returns `accepted=false` and
+  has no path to a final decision.
+- Forbidden configured secrets are checked both before Prompt persistence and
+  before model-response persistence; a leaking response is consumed, failed,
+  and never written to an Artifact.
+
+Verification:
+
+- Final targeted generation/Prompt/schema/registry suite -> **46 passed in
+  6.07s**.
+- Complete offline suite -> **232 passed in 15.72s**.
+- Offline tests cover same-input reuse, response-confirmed crash recovery,
+  gateway retry, budget exhaustion, input/output secret rejection, persona
+  scope, invalid output, exact duplicates, immutable provenance, and
+  cross-database wiring.
+- Real bounded pilot used two public synthetic seeds and two persona templates:
+  **4 total / 4 QUALITY_REVIEW / 0 duplicates / 0 accepted flags / 4 unique
+  question hashes**, consuming exactly 32768 reserved tokens.
+- Repeat pilot left counts unchanged at **15 Artifacts / 4 generation runs / 4
+  Revisions**, proving terminal reuse with no additional call.
+- Exact configured-secret scan across project files and the pilot run -> **0
+  matches**.
+
+Next:
+
+- F018: implement controlled parent/child augmentation with versioned
+  transformation taxonomy, must-preserve/may-change/must-change/forbidden
+  checks, sibling duplicate control, independent Revision/review lineage, and a
+  two-parent bounded pilot.
