@@ -15,12 +15,16 @@ dependencies = [
 test = ["pytest>=9.0"]
 
 [project.scripts]
+data-agent = "data_generation_agent.cli:main"
 lao-quality-review = "data_generation_agent.tools.quality_review:main"
 lao-difficulty-prescreen = "data_generation_agent.tools.difficulty_prescreen:main"
 lao-gap-difficulty-review = "data_generation_agent.tools.legacy_gap_difficulty_review:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"data_generation_agent.harness" = ["migrations/*.sql"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -41,6 +41,12 @@ Before enabling a tool, run:
 python -m pytest
 ```
 
+The durable runtime entrypoint is `data-agent`. `preflight` and `status` must be
+read-only; `run` must reject a disabled complete pipeline before creating a
+database. Local state mutations use SQLite transactions, CAS state versions,
+fencing leases, immutable content-addressed artifacts, and a deduplicated
+Outbox. Never bypass those primitives with ad-hoc JSON progress files.
+
 Real model smoke tests must use tiny synthetic fixtures, bounded concurrency,
 and a separate run directory. Never print API keys or copy `.env` files.
 

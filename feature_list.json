@@ -1,6 +1,6 @@
 {
   "project_goal": "Build a fail-closed, resumable data-generation agent that reads Feishu seeds and knowledge, generates or augments questions, runs the six-stage review pipeline, and writes allowlisted results and counters back to Feishu.",
-  "current_focus": "F007",
+  "current_focus": "F010",
   "last_updated": "2026-07-11",
   "features": [
     {
@@ -120,7 +120,7 @@
     {
       "id": "F009",
       "title": "Build the durable Harness runtime",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["F006", "F008"],
       "acceptance": [
         "SQLite stores jobs, candidates, revisions, attempts, events, artifacts, leases, budgets, trials, and outbox records.",
@@ -129,7 +129,7 @@
         "CLI supports preflight, run, status, resume, retry, cancel, and reconcile."
       ],
       "verification": ["State-machine truth-table tests", "Crash injection at every commit boundary", "Concurrent lease and idempotency tests"],
-      "notes": "Start with SQLite/local artifacts; retain PostgreSQL/object-store interfaces."
+      "notes": "Completed with SQLite migrations, CAS state/event transactions, immutable artifacts, fencing leases, atomic budgets, durable trials/outbox tables, recovery chaos tests, and a fail-closed CLI."
     },
     {
       "id": "F010",

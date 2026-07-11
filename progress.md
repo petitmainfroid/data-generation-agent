@@ -216,3 +216,50 @@ Verification:
 Next:
 
 - F009: implement and fault-test the durable Harness runtime.
+
+## 2026-07-11 - F009 durable Harness runtime complete
+
+Completed:
+
+- Added a packaged SQLite migration with `jobs`, `candidates`, `revisions`,
+  `attempts`, append-only `events`, immutable `artifacts`, fencing `leases`,
+  atomic `budgets`, resumable `trials`, and a deduplicated `outbox`.
+- Added explicit state graphs and compare-and-set transitions that update
+  status/version/timestamp and append the matching Event in one transaction.
+- Added lease takeover with new fencing tokens, atomic budget
+  reserve/consume/release, and a content-addressed Artifact Store using
+  flush/fsync plus atomic rename.
+- Added a frozen-payload Outbox with dedupe conflict detection, claim leases,
+  retry/ACK handling, lost-ACK recovery, and recursive secret rejection.
+- Added `data-agent preflight/run/status/resume/retry/cancel/reconcile`.
+  Preflight and missing-database status are read-only; disabled `run` exits
+  fail-closed before creating local state.
+
+Verification:
+
+- Full offline suite after integration: **78 passed**.
+- Recovery/chaos suite covers ten restarts, state/Event rollback, confirmed
+  logical-result reuse, SQLite locking, file-before-DB recovery, lost Outbox
+  ACK, and stale lease tokens: **7 passed**.
+- State/lease/budget suite: **11 passed**; Artifact/Outbox suite: **14 passed**;
+  schema/migration suite: **6 passed**; CLI/service suite: **6 passed**.
+- Built `data_generation_agent-0.1.0-py3-none-any.whl`; it contains the SQL
+  migration and CLI. An isolated install initialized schema version 1 with 12
+  SQLite tables, proving migrations do not depend on the source checkout.
+- Real CLI preflight reported the first two stages ready and the remaining four
+  `BLOCKED_NOT_IMPLEMENTED`. A real disabled `run` exited 2 and created neither
+  a database nor an artifact directory.
+- `git diff --check` passed during module verification; `runs/` remains ignored.
+
+Recovery guarantee:
+
+- Confirmed responses and logical results are not repeated after restart.
+  Providers without an idempotency key can still physically bill twice if a
+  process dies after the response but before durable confirmation; the Harness
+  promises exactly-once logical application, not impossible network-level
+  exactly-once execution.
+
+Next:
+
+- F010: implement registered Feishu Base snapshot ingestion and run a bounded
+  read-only smoke against the personal development Base.

@@ -8,12 +8,14 @@ design, and Harness activation standards are in `docs/PRD.md`.
 
 ## Current status
 
-This repository currently contains two extracted Lao adapters and the durable
-planning artifacts for the larger Agent:
+This repository contains two extracted Lao adapters and a tested local durable
+Harness for the larger Agent:
 
 - `lao-quality-review`: two-stage question classification and quality review.
 - `lao-difficulty-prescreen`: one GPT-5.5 answer and one Qwen answer used only
   as a coarse difficulty screen.
+- `data-agent`: SQLite-backed lifecycle, immutable artifacts, events, leases,
+  budgets, trials, Outbox storage, recovery, and reconciliation commands.
 
 The canonical pipeline is:
 
@@ -27,8 +29,9 @@ quality_review
 ```
 
 The final four stages are disabled placeholders, so the full pipeline is not
-implemented and cannot emit `FINAL_ACCEPTED`. The renamed prescreen manifest is
-also temporarily disabled until its fresh real-API verification is complete.
+implemented and cannot emit `FINAL_ACCEPTED`. The quality and difficulty
+prescreen stages are independently enabled, but `full_pipeline_enabled` remains
+false until every required stage passes its own release gate.
 
 The prescreen is not passrate. It preserves:
 
@@ -51,6 +54,24 @@ Run the offline suite:
 python -m pytest -p no:cacheprovider
 ```
 
+Inspect the complete pipeline without creating a database or making network
+calls:
+
+```powershell
+data-agent preflight --project-root .
+data-agent status --project-root .
+```
+
+Lifecycle commands are:
+
+```text
+data-agent run | status | resume | retry | cancel | reconcile
+```
+
+`run` fails with `BLOCKED_NOT_IMPLEMENTED` before creating a Job while the
+complete pipeline is disabled. `retry` accepts only failures durably marked as
+retryable; business rejects cannot be retried through this command.
+
 Preflight the extracted tools:
 
 ```powershell
@@ -68,7 +89,7 @@ lao-quality-review `
   --env-file C:\path\to\local\.env
 ```
 
-Run the prescreen after its manifest is verified and enabled:
+Run the verified prescreen:
 
 ```powershell
 lao-difficulty-prescreen `

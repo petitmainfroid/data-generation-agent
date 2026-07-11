@@ -7,5 +7,7 @@ __pycache__/
 !.env.example
 runs/
 artifacts/
+build/
+dist/
 *.egg-info/
 *.local.json
