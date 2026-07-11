@@ -1,6 +1,6 @@
 {
   "project_goal": "Build a fail-closed, resumable data-generation agent that reads Feishu seeds and knowledge, generates or augments questions, runs the six-stage review pipeline, and writes allowlisted results and counters back to Feishu.",
-  "current_focus": "F012",
+  "current_focus": "F013",
   "last_updated": "2026-07-11",
   "features": [
     {
@@ -160,7 +160,7 @@
     {
       "id": "F012",
       "title": "Integrate consistency review",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["F007", "F009"],
       "acceptance": [
         "Only quality-accepted, prescreen-passed revisions can run.",
@@ -168,7 +168,7 @@
         "Missing inputs, evidence conflicts, and tool errors fail closed."
       ],
       "verification": ["Legacy-equivalence fixtures", "Mock failure and resume suite", "Bounded real smoke"],
-      "notes": "No complete legacy orchestrator was found. Build the normalized stage from the reusable question/evidence consistency components and verify its semantics in this Harness."
+      "notes": "Completed as consistency_review@1.0.0 with four code-derived checks, strict evidence citations, same-revision upstream gating, retry/resume, stale-result rejection, and a stable one-record DeepSeek Flash real smoke."
     },
     {
       "id": "F013",

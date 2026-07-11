@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "consistency_review_result.v1",
+  "type": "object",
+  "required": ["schema_version", "tool_id", "tool_version", "candidate_id", "revision_id", "result_id", "input_fingerprint", "status", "decision", "issue_codes", "conflicts", "model_called", "error"],
+  "properties": {
+    "schema_version": {"const": "consistency_review_result.v1"},
+    "tool_id": {"const": "consistency_review"},
+    "tool_version": {"const": "1.0.0"},
+    "candidate_id": {"type": "string"},
+    "revision_id": {"type": "string"},
+    "result_id": {"type": "string"},
+    "input_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "status": {"enum": ["COMPLETED", "BLOCKED", "INVALID", "ERROR"]},
+    "decision": {"enum": ["PASS", "FAIL", "ERROR"]},
+    "issue_codes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "conflicts": {"type": "array"},
+    "model_called": {"type": "boolean"},
+    "error": {"type": ["string", "null"]}
+  },
+  "additionalProperties": true
+}

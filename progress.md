@@ -20,9 +20,10 @@
 - `lao_quality_review@1.1.0` exists as an independently tested adapter.
 - `lao_difficulty_prescreen@1.1.0` is enabled after its fail-closed offline
   suite, bounded default-route real smoke, idempotency check, and secret scan.
-- Consistency review, answer synthesis, real Qwen passrate, and the final gate
-  are disabled placeholders. The full pipeline remains disabled and cannot
-  emit `FINAL_ACCEPTED`.
+- `consistency_review@1.0.0` is enabled after offline, recovery, real-smoke,
+  idempotency, and secret-scan gates. Answer synthesis, real Qwen passrate, and
+  the final gate remain disabled placeholders, so the full pipeline cannot emit
+  `FINAL_ACCEPTED`.
 - Durable state, Feishu snapshot ingestion, allowlisted Outbox/counters, and
   immutable knowledge/persona/Prompt compilation are implemented and tested.
 - Generation, augmentation, bounded repair, and the last four review stages
@@ -31,9 +32,9 @@
 
 ## Current verification
 
-- Latest full offline suite after F011: `python -m pytest -p no:cacheprovider`
-  -> **171 passed in 16.16s**.
-- F011 targeted knowledge/Prompt/schema suite -> **24 passed in 4.78s**.
+- Latest full offline suite after F012: `python -m pytest -p no:cacheprovider`
+  -> **188 passed in 20.16s**.
+- F012 targeted consistency/registry/Harness suite -> **33 passed in 2.11s**.
 - Earlier smaller counts below are preserved as historical checkpoints, not as
   the current completeness claim.
 
@@ -391,3 +392,42 @@ Next:
 - F012: implement the normalized consistency-review stage from the reusable
   legacy question/evidence checks, including fail-closed resume behavior and a
   bounded real smoke before activation.
+
+## 2026-07-11 - F012 consistency review activated
+
+Completed:
+
+- Added a narrow OpenAI-compatible provider boundary with fixed chat requests,
+  bounded tokens/time, an idempotency header, HTTPS-by-default policy, strict
+  response-envelope parsing, and credential redaction on transport errors.
+- Implemented `consistency_review@1.0.0` with strict input/output contracts.
+  It only calls a model when both quality and prescreen results are passing and
+  bound to the same candidate revision.
+- Preserved the verified legacy question/evidence semantics and made four
+  explicit checks: target-domain evidence, question/evidence relevance,
+  evidence internal consistency, and question factual consistency.
+- The model returns binary evidence and conflicts; code independently derives
+  PASS/FAIL. Unknown keys, non-binary scores, decision mismatches, empty FAIL
+  evidence, or citations outside the supplied scope become `ERROR`.
+- Added per-record atomic persistence, retry of transport/invalid errors,
+  reuse of completed results, crash-after-first-record recovery, duplicate-key
+  rejection, and stale same-revision content protection.
+- Registered and enabled only the consistency node. The complete pipeline
+  remains disabled while answer synthesis, passrate, and final gate are absent.
+
+Verification:
+
+- Targeted consistency/registry/Harness suite -> **33 passed in 2.11s**.
+- Complete offline suite -> **188 passed in 20.16s**.
+- One synthetic real request using `deepseek-v4-flash`, 4096 max tokens, and
+  serial concurrency returned PASS with all four scores equal to 1.
+- Repeating the smoke preserved the exact results-file hash and `reviewed_at`,
+  demonstrating durable terminal-result reuse.
+- Exact configured-secret scan across project files plus the real-smoke run
+  directory -> **0 matches**.
+
+Next:
+
+- F013: implement typed, citable GPT-5.5 reference-answer synthesis with a
+  fixed 32768-token answer budget, same-revision upstream gating, durable
+  result identity, and a bounded real smoke.

@@ -26,9 +26,12 @@ stages:
 
   - stage_id: consistency_review
     order: 30
-    tool: consistency_review@0.0.0
-    implementation_status: placeholder
-    enabled: false
+    tool: consistency_review@1.0.0
+    implementation_status: ready
+    enabled: true
+    pass_condition:
+      status: COMPLETED
+      decision: PASS
 
   - stage_id: answer_synthesis
     order: 40

@@ -32,8 +32,8 @@ def test_pipeline_config_is_canonical_and_fail_closed() -> None:
         "final_gate",
     ]
     assert [stage["order"] for stage in stages] == [10, 20, 30, 40, 50, 60]
-    assert all(stage["enabled"] is True for stage in stages[:2])
-    assert all(stage["enabled"] is False for stage in stages[2:])
+    assert all(stage["enabled"] is True for stage in stages[:3])
+    assert all(stage["enabled"] is False for stage in stages[3:])
     passrate_policy = stages[4]["policy"]
     assert all(value is None for value in passrate_policy.values())
 
@@ -50,9 +50,18 @@ def test_prescreen_manifest_matches_source_and_is_enabled_after_reverification()
     assert "qwen_passrate_review" in manifest["must_not_substitute_for"]
 
 
+def test_consistency_manifest_is_implemented_and_enabled() -> None:
+    manifest = _yaml("tools/consistency_review/tool.yaml")
+    assert manifest["id"] == "consistency_review"
+    assert manifest["version"] == "1.0.0"
+    assert manifest["enabled"] is True
+    assert manifest["command"] == "python -m data_generation_agent.tools.consistency_review"
+    assert (ROOT / manifest["input_schema"]).is_file()
+    assert (ROOT / manifest["output_schema"]).is_file()
+
+
 def test_placeholder_manifests_are_non_callable() -> None:
     for tool_id in (
-        "consistency_review",
         "answer_synthesis",
         "qwen_passrate_review",
         "final_gate",

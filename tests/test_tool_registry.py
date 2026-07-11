@@ -24,8 +24,9 @@ def test_registry_loads_real_manifests_and_enforces_disabled_tools() -> None:
 
     prescreen = registry.get("lao_difficulty_prescreen", require_enabled=True)
     assert prescreen.qualified_id == "lao_difficulty_prescreen@1.1.0"
-    with pytest.raises(DisabledToolError):
-        registry.get("consistency_review", require_enabled=True)
+    consistency = registry.get("consistency_review", require_enabled=True)
+    assert consistency.qualified_id == "consistency_review@1.0.0"
+    assert "DEEPSEEK_API_KEY" in consistency.environment_allowlist
     with pytest.raises(DisabledToolError):
         registry.get("lao_legacy_gap_difficulty_review", require_enabled=True)
 

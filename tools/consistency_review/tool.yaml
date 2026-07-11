@@ -1,18 +1,30 @@
 id: consistency_review
-version: "0.0.0"
-enabled: false
-implementation_status: placeholder
-purpose: "Check question, constraints, evidence, and answer consistency after difficulty prescreen."
-command: null
-input_schema: null
-output_schema: null
+version: "1.0.0"
+enabled: true
+purpose: "Fail-closed question/evidence consistency review after difficulty prescreen."
+command: "python -m data_generation_agent.tools.consistency_review"
+input_schema: "contracts/consistency_review_input.schema.json"
+output_schema: "contracts/consistency_review_result.schema.json"
+pipeline_stage: "CONSISTENCY_REVIEW"
 side_effects:
   network: true
+  writable_paths: ["runs/"]
 permissions:
+  shell_for_agent: false
   feishu: none
+environment:
+  allowed:
+    - DEEPSEEK_BASE_URL
+    - DEEPSEEK_API_KEY
+    - DEEPSEEK_MODEL
 pipeline:
   order: 30
+  pass_condition: "status == COMPLETED and decision == PASS"
   next_stage: answer_synthesis
+resume:
+  key: "candidate_id + revision_id + input_fingerprint + config_digest"
 activation_gate:
-  - "user-provided implementation and contract are integrated"
-  - "offline, failure, resume, and bounded real smoke tests pass"
+  - "strict offline contract and failure tests pass"
+  - "crash-after-persist resume and stale-content tests pass"
+  - "one synthetic bounded real smoke passes and repeat is stable"
+  - "secret-pattern scan passes"
