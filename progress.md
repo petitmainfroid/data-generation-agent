@@ -296,10 +296,60 @@ Verification so far:
   returned `created=false`. Two local runtime files contained **0** matches for
   the registered token/table/field values.
 
-Not complete yet:
+Checkpoint blocker (resolved by the next entry):
 
-- The Harness acceptance criterion requires a 3-10 record real read. The
-  development seed table is empty. Do not bypass the Outbox boundary with a
-  direct ad-hoc write; F016 will first implement and test the field-allowlisted
-  writer, use it to add bounded synthetic seeds, and then close F010 with a
-  non-empty read/readback reconciliation.
+- At this checkpoint the Harness still required a 3-10 record real read and the
+  development seed table was empty. The following F016 entry resolves this via
+  the tested field-allowlisted Outbox writer, not an ad-hoc direct write.
+
+## 2026-07-11 - F010 and F016 live Feishu gates complete
+
+Completed:
+
+- Added a field-allowlisted writer for the registered seed, candidate, and
+  progress tables. Attachment/auto-number/system/computed fields are not in the
+  write policy.
+- Added business-key idempotency (`sft_id`, `candidate_id`, `stats_key`), fixed
+  shell-free `record-upsert`, post-write filtered readback, and a dispatcher
+  that ACKs only verified writes.
+- Added append-only stage-event counter rebuild, stable stats keys/dedupe keys,
+  and `data-agent rebuild-counters` / `sync-feishu`.
+
+Live development-Base evidence:
+
+- Enqueued three public synthetic seeds, dispatched them serially, and read the
+  source table back in two pages: **3 source / 3 accepted / 0 rejected**.
+- Repeated ingestion returned the same snapshot with `created=false`.
+- Wrote and read back one candidate-result record; business-key lookup returned
+  exactly one matching record.
+- Rebuilt one progress row from three candidate-stage events. The first remote
+  progress write succeeded but strict readback rejected the platform's
+  single-select array shape, leaving `RETRY_WAIT`; after type normalization the
+  same Outbox was reclaimed and became `SENT` with one Base record.
+- Appended a later event and rebuilt from all four events. The same stats row
+  updated to `pending=0`, `running=0`, `passed=2`, `rejected=1`,
+  `quarantined=0`, `machine_remaining=2`, `qualified_deficit=0`.
+- Two content versions of the progress Outbox are `SENT`, while Base still has
+  exactly one `stats_key` row and latest readback equals the local projection.
+- Scanned five local runtime files: **0** matches for the registered Base token,
+  table IDs, or field IDs.
+
+Offline verification during implementation:
+
+- F010 checkpoint full suite: **134 passed**.
+- Dispatcher + Outbox: **23 passed**; counter projection: **9 passed**; writer,
+  dispatcher, counter, and sync integration suites all pass.
+
+Security note:
+
+- During a separate read-only subagent diagnostic, PowerShell decoded the
+  ignored local profile incorrectly and echoed its contents into an internal
+  tool log. No value entered Git, Artifact, SQLite, model Prompt, or this
+  document, and OAuth is still required to access the Base. Recreate/rotate the
+  personal development Base identifiers before treating it as a production
+  resource.
+
+Next:
+
+- F011: implement immutable knowledge/persona snapshots, safe retrieval, and
+  the versioned Prompt compiler.

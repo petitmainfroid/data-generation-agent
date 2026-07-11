@@ -83,6 +83,19 @@ See `docs/FEISHU_INGESTION.md` for the local profile and resume contract.
 complete pipeline is disabled. `retry` accepts only failures durably marked as
 retryable; business rejects cannot be retried through this command.
 
+Feishu side effects are dispatched separately:
+
+```powershell
+data-agent rebuild-counters --project-root . --db runs/dev/harness.sqlite3 `
+  --job-id <job> --machine-target 100 --qualified-target 50
+data-agent sync-feishu --project-root . `
+  --profile configs/feishu/dev_base_profile.local.json `
+  --db runs/dev/harness.sqlite3 --worker-id feishu-worker-1
+```
+
+See `docs/FEISHU_SYNC.md` for business-key idempotency, lost-ACK recovery, and
+counter formulas.
+
 Preflight the extracted tools:
 
 ```powershell

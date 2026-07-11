@@ -1,6 +1,6 @@
 {
   "project_goal": "Build a fail-closed, resumable data-generation agent that reads Feishu seeds and knowledge, generates or augments questions, runs the six-stage review pipeline, and writes allowlisted results and counters back to Feishu.",
-  "current_focus": "F010",
+  "current_focus": "F011",
   "last_updated": "2026-07-11",
   "features": [
     {
@@ -134,7 +134,7 @@
     {
       "id": "F010",
       "title": "Implement Feishu Base snapshot ingestion",
-      "status": "in_progress",
+      "status": "done",
       "depends_on": ["F009"],
       "acceptance": [
         "Only registered Base/table/view/fields can be read.",
@@ -142,7 +142,7 @@
         "Every source record is normalized or explicitly rejected."
       ],
       "verification": ["Mock pagination and 429 tests", "Development Base 3-10 row read-only smoke", "Snapshot row-count reconciliation"],
-      "notes": "Allowlisted, paginated, crash-resumable ingestion and immutable snapshot storage are implemented. The personal development seed table is reachable but currently has 0 records; the required 3-10 row live read will be completed through the F016 allowlisted Outbox test writer before marking this feature done."
+      "notes": "Completed with allowlisted pagination, per-page crash resume, immutable snapshots, and a live 3-record personal-Base read: 3 accepted, 0 rejected, stable repeat snapshot, zero registered-resource leaks."
     },
     {
       "id": "F011",
@@ -212,7 +212,7 @@
     {
       "id": "F016",
       "title": "Implement Feishu allowlisted Outbox and counters",
-      "status": "todo",
+      "status": "done",
       "depends_on": ["F009", "F010"],
       "acceptance": [
         "Models and review tools cannot write Feishu directly.",
@@ -221,7 +221,7 @@
         "Development Base readback exactly matches local committed state."
       ],
       "verification": ["Mock partial-write tests", "Development Base write/read/retry/conflict smoke", "Full counter rebuild and zero-drift reconciliation"],
-      "notes": "Production writes remain disabled until a dedicated test Base and field allowlist are approved."
+      "notes": "Completed against the personal development Base: business-key idempotent seed/candidate/progress writes, verified readback before ACK, lost-ACK recovery, event counter rebuild/update, and zero-drift reconciliation. Production Base IDs remain unconfigured."
     },
     {
       "id": "F017",

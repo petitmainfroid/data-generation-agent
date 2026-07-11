@@ -262,6 +262,7 @@ class LarkCliBaseClient:
         *,
         field_aliases: Sequence[str] = (),
         view_alias: str | None = None,
+        filter_equals: tuple[str, Any] | None = None,
         base_alias: str | None = None,
         offset: int = 0,
         limit: int = 100,
@@ -277,6 +278,24 @@ class LarkCliBaseClient:
         argv = self._base_argv("+record-list", table.table_id)
         if view_id is not None:
             argv.extend(["--view-id", view_id])
+        if filter_equals is not None:
+            if not isinstance(filter_equals, tuple) or len(filter_equals) != 2:
+                raise ValueError("filter_equals must be a (field_alias, value) tuple")
+            filter_alias, filter_value = filter_equals
+            filter_field_id = table.field_id(filter_alias)
+            try:
+                filter_json = json.dumps(
+                    {
+                        "logic": "and",
+                        "conditions": [[filter_field_id, "==", filter_value]],
+                    },
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+            except (TypeError, ValueError) as exc:
+                raise ValueError("filter_equals value must be JSON serializable") from exc
+            argv.extend(["--filter-json", filter_json])
         for field_id in field_ids:
             argv.extend(["--field-id", field_id])
         argv.extend(["--offset", str(offset), "--limit", str(limit), "--format", "json"])

@@ -19,6 +19,10 @@ from data_generation_agent.harness.service import HarnessService, HarnessService
 from data_generation_agent.feishu.models import FeishuIngestionError
 from data_generation_agent.feishu.profile import BaseProfileError
 from data_generation_agent.feishu.runtime import ingest_registered_source
+from data_generation_agent.feishu.sync import (
+    dispatch_feishu_outbox,
+    rebuild_and_enqueue_progress,
+)
 from data_generation_agent.tools.common import redact_secrets
 
 
@@ -54,6 +58,19 @@ def build_parser() -> argparse.ArgumentParser:
     ingest.add_argument("--view-alias")
     ingest.add_argument("--source-id")
     ingest.add_argument("--page-size", type=int, default=100)
+
+    sync = commands.add_parser("sync-feishu", parents=[common])
+    sync.add_argument("--profile", type=Path, required=True)
+    sync.add_argument("--worker-id", required=True)
+    sync.add_argument("--limit", type=int, default=20)
+    sync.add_argument("--lease-seconds", type=float, default=60)
+    sync.add_argument("--max-attempts", type=int, default=3)
+
+    counters = commands.add_parser("rebuild-counters", parents=[common])
+    counters.add_argument("--job-id", required=True)
+    counters.add_argument("--base-alias", default="development")
+    counters.add_argument("--machine-target", type=int, required=True)
+    counters.add_argument("--qualified-target", type=int, required=True)
 
     run = commands.add_parser("run", parents=[common])
     run.add_argument("--job-id", required=True)
@@ -166,7 +183,16 @@ def _status_read_only(database: Path, job_id: str | None) -> dict[str, Any]:
 
 def run_command(args: argparse.Namespace) -> int:
     root, config, database, artifacts = _paths(
-        args, require_database=args.command in {"resume", "retry", "cancel", "reconcile"}
+        args,
+        require_database=args.command
+        in {
+            "resume",
+            "retry",
+            "cancel",
+            "reconcile",
+            "sync-feishu",
+            "rebuild-counters",
+        },
     )
     if args.command == "preflight":
         _emit(preflight_report(root, config))
@@ -185,6 +211,30 @@ def run_command(args: argparse.Namespace) -> int:
                 source_id=args.source_id,
                 view_alias=args.view_alias,
                 page_size=args.page_size,
+            )
+        )
+        return EXIT_OK
+    if args.command == "sync-feishu":
+        profile = resolve_within(root, args.profile, must_exist=True)
+        _emit(
+            dispatch_feishu_outbox(
+                profile_path=profile,
+                database_path=database,
+                worker_id=args.worker_id,
+                limit=args.limit,
+                lease_seconds=args.lease_seconds,
+                max_attempts=args.max_attempts,
+            )
+        )
+        return EXIT_OK
+    if args.command == "rebuild-counters":
+        _emit(
+            rebuild_and_enqueue_progress(
+                database_path=database,
+                job_id=args.job_id,
+                base_alias=args.base_alias,
+                machine_target=args.machine_target,
+                qualified_target=args.qualified_target,
             )
         )
         return EXIT_OK
